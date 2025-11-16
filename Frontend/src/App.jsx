@@ -1,0 +1,50 @@
+import React from 'react'
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import Applayout from './Applayout/Applayout'
+import FileUpload from './Pages/FileUpload.jsx'
+import Dashboard from './Pages/Dashboard.jsx'
+import Myorders from './Pages/Myorders.jsx'
+import Profile from './Pages/Profile.jsx'
+import ShopOrders from './Pages/ShopOrders.jsx'
+
+
+function App() {
+
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Applayout />,
+      children: [
+
+        {
+          path: "/FileUpload",
+          element: <FileUpload />
+        },
+        {
+          path: "/",
+          element: <Dashboard />
+        },
+        {
+          path: "/Myorders",
+          element: <Myorders />
+        },
+        {
+          path: "/Profile",
+          element: <Profile />
+        },
+        {
+          path: "/ShopOrders",
+          element: <ShopOrders />
+        },
+      ]
+    }
+
+  ])
+
+  return <>
+    <RouterProvider router={router} />
+  </>
+
+}
+
+export default App
