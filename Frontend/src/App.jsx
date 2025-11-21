@@ -1,11 +1,10 @@
 import React from 'react'
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import Applayout from './Applayout/Applayout'
-import FileUpload from './Pages/FileUpload.jsx'
-import Dashboard from './Pages/Dashboard.jsx'
-import Myorders from './Pages/Myorders.jsx'
-import Profile from './Pages/Profile.jsx'
-import ShopOrders from './Pages/ShopOrders.jsx'
+import FileUpload from "./Pages/User/FileUpload.jsx"
+import Dashboard from "./Pages/User/Dashboard.jsx"
+import Myorders from "./Pages/User/Myorders.jsx"
+import Profile from "./Pages/User/Profile.jsx"
 
 
 function App() {
