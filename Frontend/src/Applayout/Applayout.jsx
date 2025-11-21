@@ -12,7 +12,7 @@ function Applayout() {
       <aside className='hidden sm:flex'>
         <Sidebar/>
       </aside>
-      <div className='w-[86.5vw] ml-[13vw] mt-[7vh]'>
+      <div className='smLw-[86.5vw] sm:ml-[13vw] mt-[7vh]'>
         <Outlet/>
       </div>
 
