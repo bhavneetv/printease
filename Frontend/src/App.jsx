@@ -5,6 +5,7 @@ import FileUpload from "./Pages/User/FileUpload.jsx"
 import Dashboard from "./Pages/User/Dashboard.jsx"
 import Myorders from "./Pages/User/Myorders.jsx"
 import Profile from "./Pages/User/Profile.jsx"
+import ShopOrders from "./Pages/Shop/ShopOrders.jsx"
 
 
 function App() {
@@ -16,12 +17,12 @@ function App() {
       children: [
 
         {
-          path: "/FileUpload",
-          element: <FileUpload />
-        },
-        {
           path: "/",
           element: <Dashboard />
+        },
+        {
+          path: "/FileUpload",
+          element: <FileUpload />
         },
         {
           path: "/Myorders",
