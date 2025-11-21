@@ -1,5 +1,7 @@
 import React from "react";
 import { FaShoppingCart, FaFileAlt, FaRupeeSign, FaClock } from "react-icons/fa";
+import axios from "axios"
+import { useEffect , useState } from "react";
 
 export default function Dashboard() {
   const stats = [
@@ -53,6 +55,20 @@ export default function Dashboard() {
       </span>
     );
   };
+
+
+
+  const fetching = async ()=>{
+    await axios.get("").then((res)=>{
+      console.log(res)
+    }).catch((err)=>{
+      console.log(err)
+    })
+  }
+  useEffect(() => {
+fetching()
+}, [])
+
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white p-6">
