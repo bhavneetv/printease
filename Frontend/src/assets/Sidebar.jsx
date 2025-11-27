@@ -1,5 +1,6 @@
 // src/components/Sidebar.jsx
 import React from "react";
+import { useState , useEffect } from "react";
 import {
   FaPrint,
   FaHome,
@@ -9,9 +10,11 @@ import {
   FaUser,
   FaSignOutAlt
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link , useLocation } from "react-router-dom";
 
 export default function Sidebar({ collapsed }) {
+
+  const location = useLocation()
 
   const user = sessionStorage.getItem("user") || null
   console.log(user)
@@ -20,17 +23,24 @@ export default function Sidebar({ collapsed }) {
     sessionStorage.removeItem("user")
   }
 
+  const [active, setactive] = useState(false)
+
+  useEffect(() => {
+   setactive(true)
+  }, [])
+  
+
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 w-64 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-all duration-300 ${
+      className={`top-5 sm:fixed sm:top-0  left-0 z-40 w-64 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-all duration-300 ${
         collapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0"
       }`}
     >
       <div className="h-full px-3 py-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-8 px-2">
+        <div className="hidden sm:flex items-center justify-between mb-8 px-2">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+            <div className={`w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center`}>
               <FaPrint className="text-white text-lg" />
             </div>
             <span className="text-xl font-bold text-gray-800 dark:text-white">PrintEase</span>
@@ -39,14 +49,14 @@ export default function Sidebar({ collapsed }) {
 
         <nav className="space-y-2">
        <Link to="/">
-          <div className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/" ? "bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaHome className="w-5" />
             <span className="ml-3">Dashboard</span>
           </div>
        </Link>
 
       <Link to="/FileUpload">
-          <div className="flex items-center px-4 py-3 text-white bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/FileUpload" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaUpload className="w-5" />
             <span className="ml-3 font-medium">Upload File</span>
           </div>
@@ -54,7 +64,7 @@ export default function Sidebar({ collapsed }) {
 
        <Link to="/Myorders">
        
-          <div className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Myorders" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaShoppingBag className="w-5" />
             <span className="ml-3">My Orders</span>
           </div>
@@ -66,14 +76,14 @@ export default function Sidebar({ collapsed }) {
           </a>
 
         <Link to="/Profile">
-          <div className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Profile" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaUser className="w-5" />
             <span className="ml-3">Profile</span>
           </div>
         </Link>
 
         <Link to="/Login">
-          <div className="flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Login" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaSignOutAlt className="w-5" />
 
             {
