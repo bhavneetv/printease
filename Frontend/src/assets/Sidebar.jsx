@@ -49,14 +49,14 @@ export default function Sidebar({ collapsed }) {
 
         <nav className="space-y-2">
        <Link to="/">
-          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/" ? "bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg hover:bg-gray-100 ${location.pathname == "/" ? "bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaHome className="w-5" />
             <span className="ml-3">Dashboard</span>
           </div>
        </Link>
 
       <Link to="/FileUpload">
-          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/FileUpload" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg hover:bg-gray-100 ${location.pathname == "/FileUpload" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaUpload className="w-5" />
             <span className="ml-3 font-medium">Upload File</span>
           </div>
@@ -64,7 +64,7 @@ export default function Sidebar({ collapsed }) {
 
        <Link to="/Myorders">
        
-          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Myorders" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg hover:bg-gray-100 ${location.pathname == "/Myorders" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaShoppingBag className="w-5" />
             <span className="ml-3">My Orders</span>
           </div>
@@ -76,14 +76,14 @@ export default function Sidebar({ collapsed }) {
           </a>
 
         <Link to="/Profile">
-          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Profile" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg hover:bg-gray-100 ${location.pathname == "/Profile" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaUser className="w-5" />
             <span className="ml-3">Profile</span>
           </div>
         </Link>
 
         <Link to="/Login">
-          <div className={`flex items-center px-4 py-3 text-white rounded-lg ${location.pathname == "/Login" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
+          <div className={`flex items-center px-4 py-3 text-white rounded-lg hover:bg-gray-100 ${location.pathname == "/Login" ?"bg-linear-to-br from-purple-500 to-indigo-600" : ""}`}>
             <FaSignOutAlt className="w-5" />
 
             {
