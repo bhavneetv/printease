@@ -10,8 +10,9 @@ import {
   FaCreditCard,
   FaSignOutAlt
 } from "react-icons/fa";
+import Sidebar from "./Sidebar";
 
-export default function Navbar({ onToggleSidebar, onToggleTheme, isDark, userName }) {
+export default function Navbar({onToggleTheme, isDark, userName }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -23,8 +24,17 @@ export default function Navbar({ onToggleSidebar, onToggleTheme, isDark, userNam
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
+const [view, setview] = useState(false)
+
+  const onToggleSidebar = ()=>{
+    setview(!view)
+    console.log("clicked")
+    console.log(view)
+  }
+
   return (
-    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 z-30 w-full md:w-[calc(100%-16rem)]">
+    <div>
+      <nav className="bg-white  dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 z-30 w-full md:w-[calc(100%-16rem)]">
       <div className="px-3 py-3 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -79,5 +89,16 @@ export default function Navbar({ onToggleSidebar, onToggleTheme, isDark, userNam
         </div>
       </div>
     </nav>
+   <div className="mt-10 sm:mt-0">
+    {
+    view === true ?
+     <div className="transition-all duration-300 absolute">
+      <Sidebar/>
+    </div>
+    :
+    null
+   }
+   </div>
+    </div>
   );
 }
