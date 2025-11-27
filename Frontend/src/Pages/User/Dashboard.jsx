@@ -56,6 +56,23 @@ export default function Dashboard() {
     );
   };
 
+ // Dashboard data fetching with card info and recent activity
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const token = sessionStorage.getItem("token");
+
+  fetch("http://localhost/printease/Backend/api/dashboard.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: user?.email,
+      token: token,
+    }),
+  })
+    // yoo data JSON me de ga to tu dhek liya kese karna ha
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+    });
 
 
 

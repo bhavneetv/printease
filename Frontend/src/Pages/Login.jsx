@@ -72,29 +72,12 @@ export default function Login() {
         }
       })
       .catch((err) => console.error("Error:", err));
-      
+
   };
 
   loginTest();
 
-  // Dashboard data fetching with card info and recent activity
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const token = sessionStorage.getItem("token");
-
-  fetch("http://localhost/printease/Backend/api/dashboard.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: user.email,
-      token: token,
-    }),
-  })
-    // yoo data JSON me de ga to tu dhek liya kese karna ha
-    .then((res) => res.json())
-    .then((data) => {
-      console.log(data);
-    });
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
       {/* Background Pattern */}

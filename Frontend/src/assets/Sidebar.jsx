@@ -13,6 +13,13 @@ import { Link } from "react-router-dom";
 
 export default function Sidebar({ collapsed }) {
 
+  const user = sessionStorage.getItem("user") || null
+  console.log(user)
+
+  const handlelogout = ()=>{
+    sessionStorage.removeItem("user")
+  }
+
 
   return (
     <aside
@@ -68,7 +75,13 @@ export default function Sidebar({ collapsed }) {
         <Link to="/Login">
           <div className="flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
             <FaSignOutAlt className="w-5" />
-            <span className="ml-3">Logout</span>
+
+            {
+              user != null ?
+              <span onClick={handlelogout()} className="ml-3">Logout</span>
+              :
+              <span className="ml-3">Login</span>
+            }
           </div>
         </Link>
         </nav>
