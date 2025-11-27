@@ -58,16 +58,7 @@ export default function Dashboard() {
 
 
 
-  const fetching = async ()=>{
-    await axios.get("").then((res)=>{
-      console.log(res)
-    }).catch((err)=>{
-      console.log(err)
-    })
-  }
-  useEffect(() => {
-fetching()
-}, [])
+
 
 
   return (

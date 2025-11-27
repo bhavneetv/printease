@@ -12,6 +12,8 @@ import {
 import { Link } from "react-router-dom";
 
 export default function Sidebar({ collapsed }) {
+
+
   return (
     <aside
       className={`fixed top-0 left-0 z-40 w-64 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-all duration-300 ${
@@ -63,10 +65,12 @@ export default function Sidebar({ collapsed }) {
           </div>
         </Link>
 
-          <a className="flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+        <Link to="/Login">
+          <div className="flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
             <FaSignOutAlt className="w-5" />
             <span className="ml-3">Logout</span>
-          </a>
+          </div>
+        </Link>
         </nav>
       </div>
     </aside>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,8 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const navigate = useNavigate();
+
   const handleLogin = () => {
     if (validateForm()) {
       setIsLoading(true);
@@ -47,6 +50,50 @@ export default function Login() {
     console.log('Login with Google');
     alert('Google OAuth integration would happen here!');
   };
+
+   const loginTest = () => {
+    fetch("http://localhost:8080/printease/Backend/backend/login.php", {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+
+        if (data.status === "success") {
+          // Save user info session for testing
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+
+          // Save token
+          sessionStorage.setItem("token", data.token);
+
+          console.log("Login successful!");
+          navigate("/")
+        }
+      })
+      .catch((err) => console.error("Error:", err));
+      
+  };
+
+  loginTest();
+
+  // Dashboard data fetching with card info and recent activity
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const token = sessionStorage.getItem("token");
+
+  fetch("http://localhost/printease/Backend/api/dashboard.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: user.email,
+      token: token,
+    }),
+  })
+    // yoo data JSON me de ga to tu dhek liya kese karna ha
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+    });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
