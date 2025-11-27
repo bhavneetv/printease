@@ -1,162 +1,597 @@
-import React from "react";
-import {
-  FaUser,
-  FaEnvelope,
-  FaPhoneAlt,
-  FaCalendar,
-  FaMapMarkerAlt,
-  FaLock,
-} from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
 
-export default function Profile() {
+const ProfileSettings = () => {
+  const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [profileData, setProfileData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
+    paymentMode: 'upi',
+    upiId: '',
+    profileImage: '',
+    totalOrders: 0,
+    totalSpent: 0
+  });
+  const [errors, setErrors] = useState({});
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  // Fetch profile data
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      
+      // Simulated API call - Replace with your actual API endpoint
+      // const response = await fetch('https://your-api.com/api/profile');
+      // const data = await response.json();
+      
+      const simulatedData = {
+        fullName: 'Bhavneet Verma',
+        email: 'bhavneet@email.com',
+        phone: '+91 98765 43210',
+        address: 'Ambala, Haryana, India',
+        paymentMode: 'upi',
+        upiId: 'bhavneet@upi',
+        profileImage: 'https://ui-avatars.com/api/?name=Bhavneet+Verma&background=667eea&color=fff&bold=true&size=120',
+        totalOrders: 248,
+        totalSpent: 4285
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setProfileData(simulatedData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setProfileData(prev => ({ ...prev, [id]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[id]) {
+      setErrors(prev => ({ ...prev, [id]: '' }));
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { id, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    const re = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,5}[)]?[-\s\.]?[0-9]{4,6}$/;
+    return re.test(phone.replace(/\s/g, ''));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newErrors = {};
+
+    // Validate Full Name
+    if (profileData.fullName.trim().length < 2) {
+      newErrors.fullName = 'Name must be at least 2 characters long';
+    }
+
+    // Validate Email
+    if (!validateEmail(profileData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Validate Phone
+    if (!validatePhone(profileData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // API call to update profile
+    // const response = await fetch('https://your-api.com/api/profile', {
+    //   method: 'PUT',
+    //   body: JSON.stringify(profileData)
+    // });
+
+    showToast('Profile updated successfully!', 'success');
+  };
+
+  const handleCancel = () => {
+    fetchProfileData();
+    setErrors({});
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileData(prev => ({ ...prev, profileImage: e.target.result }));
+        showToast('Profile picture updated successfully!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+
+    if (passwordData.newPassword.length < 8) {
+      showToast('Password must be at least 8 characters long', 'error');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+
+    // API call to change password
+    // await fetch('https://your-api.com/api/change-password', {
+    //   method: 'POST',
+    //   body: JSON.stringify(passwordData)
+    // });
+
+    setShowPasswordModal(false);
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    showToast('Password changed successfully!', 'success');
+  };
+
+  const handleDeleteAccount = () => {
+    // API call to delete account
+    // await fetch('https://your-api.com/api/delete-account', {
+    //   method: 'DELETE'
+    // });
+
+    setShowDeleteModal(false);
+    showToast('Account deletion initiated. You will receive a confirmation email.', 'success');
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white p-6">
+    <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+      <style>{`
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .toast-enter {
+          animation: slideInRight 0.3s ease-out;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .error-shake {
+          animation: shake 0.3s ease-out;
+        }
+      `}</style>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <FaUser className="text-purple-400" />
-          Profile Settings
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-24 right-5 z-50 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 toast-enter`}>
+          <i className={`fas ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Page Header */}
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
+          👤 Profile Settings
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
           Manage your account information and preferences
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Profile Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-8">
+        {/* Profile Overview Card */}
+        <div className="lg:col-span-1">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="gradient-bg p-6 pb-16"></div>
+            <div className="px-6 pb-6 -mt-12">
+              <div className="flex flex-col items-center">
+                {/* Profile Image */}
+                <div className="relative w-30 h-30 mb-4">
+                  <img
+                    src={profileData.profileImage}
+                    className="w-30 h-30 rounded-full border-4 border-white dark:border-gray-800 shadow-lg"
+                    alt="Profile"
+                  />
+                  <div
+                    onClick={() => document.getElementById('imageUpload').click()}
+                    className="absolute bottom-0 right-0 gradient-bg w-9 h-9 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform border-3 border-white dark:border-gray-800"
+                  >
+                    <i className="fas fa-camera text-white text-sm"></i>
+                  </div>
+                  <input
+                    type="file"
+                    id="imageUpload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                </div>
 
-        {/* LEFT PROFILE CARD */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
+                  {loading ? '...' : profileData.fullName}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Premium Member</p>
 
-          {/* Cover Banner */}
-          <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-6 rounded-lg mb-6 text-center">
-            <div className="relative w-28 h-28 bg-indigo-300 text-indigo-900 rounded-full mx-auto flex items-center justify-center text-4xl font-bold">
-              BV
-              <FaLock className="absolute bottom-0 right-0 bg-white rounded-full text-purple-500 p-1 text-sm" />
-            </div>
+                <div className="w-full space-y-3">
+                  <div className="flex items-center text-sm">
+                    <i className="fas fa-envelope w-5 text-gray-400"></i>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">
+                      {loading ? '...' : profileData.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <i className="fas fa-phone w-5 text-gray-400"></i>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">
+                      {loading ? '...' : profileData.phone}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <i className="fas fa-calendar w-5 text-gray-400"></i>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">Joined Jan 2024</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <i className="fas fa-map-marker-alt w-5 text-gray-400"></i>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">
+                      {loading ? '...' : profileData.address}
+                    </span>
+                  </div>
+                </div>
 
-            <h2 className="text-xl font-bold mt-4">Bhavneet Verma</h2>
-            <p className="text-gray-200 text-sm">Premium Member</p>
-          </div>
-
-          {/* Info List */}
-          <div className="space-y-4 text-sm">
-            <InfoRow icon={<FaEnvelope />} text="bhavneet@email.com" />
-            <InfoRow icon={<FaPhoneAlt />} text="+91 98765 43210" />
-            <InfoRow icon={<FaCalendar />} text="Joined Jan 2024" />
-            <InfoRow icon={<FaMapMarkerAlt />} text="Ambala, Haryana" />
-          </div>
-
-          {/* Stats */}
-          <div className="mt-8 grid grid-cols-2 gap-6 text-center">
-            <div>
-              <p className="text-2xl font-bold">248</p>
-              <p className="text-gray-400 text-xs mt-1">Total Orders</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">₹4,285</p>
-              <p className="text-gray-400 text-xs mt-1">Total Spent</p>
+                <div className="w-full mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <p className="text-2xl font-bold text-gray-800 dark:text-white">
+                        {loading ? '...' : profileData.totalOrders}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Total Orders</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-800 dark:text-white">
+                        {loading ? '...' : `₹${profileData.totalSpent.toLocaleString()}`}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Total Spent</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT SIDE FORM */}
-        <div className="lg:col-span-2 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-
-          <h2 className="text-xl font-semibold mb-2">Personal Information</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Update your account details and preferences
-          </p>
-
-          <form className="space-y-6">
-
-            {/* Full Name */}
-            <div>
-              <label className="text-sm text-gray-300 mb-1 block">Full Name</label>
-              <Input value="Bhavneet Verma" />
+        {/* Edit Profile Section */}
+        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+                Personal Information
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Update your account details and preferences
+              </p>
             </div>
 
-            {/* Email */}
-            <div>
-              <label className="text-sm text-gray-300 mb-1 block">Email Address</label>
-              <Input value="bhavneet@email.com" />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="text-sm text-gray-300 mb-1 block">Phone Number</label>
-              <Input value="+91 98765 43210" />
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="text-sm text-gray-300 mb-1 block">Address</label>
-              <textarea
-                className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-gray-300"
-                rows="3"
-                defaultValue="Ambala, Haryana, India"
-              />
-            </div>
-
-            {/* Payment Mode */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 md:p-6 space-y-6">
+              {/* Full Name */}
               <div>
-                <label className="text-sm text-gray-300 mb-1 block">
-                  Preferred Payment Mode
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <i className="fas fa-user mr-2 text-gray-400"></i>Full Name
                 </label>
-                <select className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-gray-300">
-                  <option>UPI</option>
-                  <option>Cash on Delivery</option>
-                </select>
+                <input
+                  type="text"
+                  id="fullName"
+                  value={profileData.fullName}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                />
+                {errors.fullName && (
+                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.fullName}</p>
+                )}
               </div>
 
-              {/* UPI ID */}
+              {/* Email */}
               <div>
-                <label className="text-sm text-gray-300 mb-1 block">UPI ID</label>
-                <Input value="yourname@upi" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <i className="fas fa-envelope mr-2 text-gray-400"></i>Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={profileData.email}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <i className="fas fa-phone mr-2 text-gray-400"></i>Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={profileData.phone}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                />
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.phone}</p>
+                )}
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <i className="fas fa-map-marker-alt mr-2 text-gray-400"></i>Address
+                </label>
+                <textarea
+                  id="address"
+                  rows="3"
+                  value={profileData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                ></textarea>
+              </div>
+
+              {/* Payment Preferences */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i className="fas fa-wallet mr-2 text-gray-400"></i>Preferred Payment Mode
+                  </label>
+                  <select
+                    id="paymentMode"
+                    value={profileData.paymentMode}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                  >
+                    <option value="upi">UPI</option>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                  </select>
+                </div>
+
+                {profileData.paymentMode === 'upi' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <i className="fas fa-mobile-alt mr-2 text-gray-400"></i>UPI ID
+                    </label>
+                    <input
+                      type="text"
+                      id="upiId"
+                      value={profileData.upiId}
+                      onChange={handleInputChange}
+                      placeholder="yourname@upi"
+                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Save Button */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <button
+                  onClick={handleSubmit}
+                  className="flex-1 gradient-bg text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all transform hover:scale-105"
+                >
+                  <i className="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                  <i className="fas fa-times mr-2"></i>Cancel
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Buttons */}
-            <div className="flex gap-4 mt-6">
+          {/* Account Actions */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mt-4 md:mt-6">
+            <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">Account Actions</h2>
+            </div>
+            <div className="p-4 md:p-6 space-y-4">
               <button
-                type="button"
-                className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 py-3 rounded-lg font-semibold"
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition"
               >
-                Save Changes
+                <span>
+                  <i className="fas fa-key mr-2"></i>Change Password
+                </span>
+                <i className="fas fa-chevron-right"></i>
               </button>
-
               <button
-                type="button"
-                className="flex-1 bg-slate-700 py-3 rounded-lg font-semibold text-gray-300 hover:bg-slate-600"
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition"
               >
-                Cancel
+                <span>
+                  <i className="fas fa-trash-alt mr-2"></i>Delete Account
+                </span>
+                <i className="fas fa-chevron-right"></i>
               </button>
             </div>
-          </form>
+          </div>
         </div>
-
       </div>
-    </div>
-  );
-}
 
-// COMPONENTS
-function InfoRow({ icon, text }) {
-  return (
-    <div className="flex items-center gap-3 text-gray-300">
-      <span className="text-lg">{icon}</span>
-      <span>{text}</span>
-    </div>
-  );
-}
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPasswordModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Change Password</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                />
+                <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handlePasswordSubmit}
+                  className="flex-1 gradient-bg text-white px-6 py-2.5 rounded-lg font-medium hover:opacity-90 transition"
+                >
+                  Update Password
+                </button>
+                <button
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-function Input({ value }) {
-  return (
-    <input
-      type="text"
-      defaultValue={value}
-      className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-gray-300"
-    />
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-red-600 dark:text-red-400">Delete Account</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to delete your account? This action cannot be undone and all
+                your data will be permanently removed.
+              </p>
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>Warning: This action is
+                  irreversible!
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteAccount}
+                  className="flex-1 bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-red-700 transition"
+                >
+                  Yes, Delete My Account
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="mt-8 text-center pb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          © 2025 PrintEase | Designed by{' '}
+          <span className="font-semibold text-purple-600 dark:text-purple-400">
+            Bhavneet Verma
+          </span>
+        </p>
+      </footer>
+    </main>
   );
-}
+};
+
+export default ProfileSettings;

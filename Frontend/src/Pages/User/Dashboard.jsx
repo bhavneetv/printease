@@ -1,148 +1,254 @@
-import React from "react";
-import { FaShoppingCart, FaFileAlt, FaRupeeSign, FaClock } from "react-icons/fa";
-import axios from "axios"
-import { useEffect , useState } from "react";
+import React, { useState, useEffect } from 'react';
 
-export default function Dashboard() {
-  const stats = [
-    {
-      icon: <FaShoppingCart className="text-purple-400 text-3xl" />,
-      title: "Total Orders",
-      value: "248",
-      change: "↑ 12% from last month",
-      color: "text-green-400",
-    },
-    {
-      icon: <FaFileAlt className="text-blue-400 text-3xl" />,
-      title: "Pages Printed",
-      value: "3,847",
-      change: "↑ 8% from last month",
-      color: "text-green-400",
-    },
-    {
-      icon: <FaRupeeSign className="text-green-500 text-3xl" />,
-      title: "Total Spent",
-      value: "₹4,285",
-      change: "Average ₹17.28/order",
-      color: "text-gray-400",
-    },
-    {
-      icon: <FaClock className="text-yellow-400 text-3xl" />,
-      title: "Pending Orders",
-      value: "5",
-      change: "2 ready for pickup",
-      color: "text-yellow-400",
-    },
-  ];
+const Dashboard = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pagesPrinted: 0,
+    totalSpent: 0,
+    pendingOrders: 0,
+    readyForPickup: 0,
+    ordersGrowth: 0,
+    pagesGrowth: 0
+  });
 
-  const rows = [
-    { id: "#ORD-2847", doc: "Assignment.pdf", pages: 24, amount: "₹96", status: "Completed" },
-    { id: "#ORD-2846", doc: "Notes.pdf", pages: 15, amount: "₹60", status: "Processing" },
-    { id: "#ORD-2845", doc: "Report.docx", pages: 42, amount: "₹168", status: "Completed" },
-    { id: "#ORD-2844", doc: "Presentation.pptx", pages: 8, amount: "₹32", status: "Pending" },
-    { id: "#ORD-2843", doc: "Syllabus.pdf", pages: 6, amount: "₹24", status: "Completed" },
-  ];
+  // Fetch orders from API
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-  const badge = (status) => {
-    const colors = {
-      Completed: "bg-green-200 text-green-700",
-      Processing: "bg-blue-200 text-blue-700",
-      Pending: "bg-yellow-200 text-yellow-700",
-    };
-    return (
-      <span className={`px-3 py-1 text-xs rounded-full ${colors[status]}`}>
-        {status}
-      </span>
-    );
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      
+      // Simulated API call - Replace this URL with your actual API endpoint
+      // const response = await fetch('https://your-api.com/api/orders');
+      // const data = await response.json();
+      
+      // Simulated data for demonstration
+      const simulatedData = [
+        { id: '#ORD-2847', document: 'Assignment.pdf', pages: 24, amount: 96, status: 'completed' },
+        { id: '#ORD-2846', document: 'Notes.pdf', pages: 15, amount: 60, status: 'processing' },
+        { id: '#ORD-2845', document: 'Report.docx', pages: 42, amount: 168, status: 'completed' },
+        { id: '#ORD-2844', document: 'Presentation.pptx', pages: 8, amount: 32, status: 'pending' },
+        { id: '#ORD-2843', document: 'Syllabus.pdf', pages: 6, amount: 24, status: 'completed' }
+      ];
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setOrders(simulatedData);
+      calculateStats(simulatedData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setLoading(false);
+    }
   };
 
- // Dashboard data fetching with card info and recent activity
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const token = sessionStorage.getItem("token");
+  // Calculate statistics from orders
+  const calculateStats = (ordersData) => {
+    const totalOrders = ordersData.length;
+    const pagesPrinted = ordersData.reduce((sum, order) => sum + order.pages, 0);
+    const totalSpent = ordersData.reduce((sum, order) => sum + order.amount, 0);
+    const pendingOrders = ordersData.filter(order => order.status === 'pending').length;
+    const readyForPickup = ordersData.filter(order => 
+      order.status === 'completed' || order.status === 'processing'
+    ).length;
 
-  fetch("http://localhost/printease/Backend/api/dashboard.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: user?.email,
-      token: token,
-    }),
-  })
-    // yoo data JSON me de ga to tu dhek liya kese karna ha
-    .then((res) => res.json())
-    .then((data) => {
-      console.log(data);
+    // Simulated growth percentages (replace with actual calculation from database)
+    const ordersGrowth = 12;
+    const pagesGrowth = 8;
+
+    setStats({
+      totalOrders,
+      pagesPrinted,
+      totalSpent,
+      pendingOrders,
+      readyForPickup,
+      ordersGrowth,
+      pagesGrowth
     });
+  };
 
+  const getStatusClass = (status) => {
+    const classes = {
+      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    };
+    return classes[status] || '';
+  };
 
+  const averagePerOrder = stats.totalOrders > 0 
+    ? (stats.totalSpent / stats.totalOrders).toFixed(2) 
+    : 0;
 
-
-// helo this is comment 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white p-6">
+    <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+      <style>{`
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+      `}</style>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+      {/* Welcome Header */}
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
           Welcome, Bhavneet 👋
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
           Here's what's happening with your print orders today
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-slate-800/50 border border-slate-700 p-6 rounded-xl flex flex-col gap-4"
-          >
-            {s.icon}
-            <p className="text-gray-400 text-sm">{s.title}</p>
-            <h2 className="text-3xl font-bold">{s.value}</h2>
-            <span className={`text-xs ${s.color}`}>{s.change}</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-4 md:mb-8">
+        {/* Total Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 gradient-bg rounded-lg flex items-center justify-center">
+              <i className="fas fa-shopping-cart text-white text-base md:text-lg"></i>
+            </div>
           </div>
-        ))}
-      </div>
+          <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Total Orders
+          </h3>
+          <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
+            {loading ? '...' : stats.totalOrders}
+          </p>
+          <p className="text-xs mt-1 md:mt-2 text-green-500">
+            <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}% from last month
+          </p>
+        </div>
 
-      {/* Recent Activity Table */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+        {/* Pages Printed */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-file-alt text-white text-base md:text-lg"></i>
+            </div>
+          </div>
+          <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Pages Printed
+          </h3>
+          <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
+            {loading ? '...' : stats.pagesPrinted.toLocaleString()}
+          </p>
+          <p className="text-xs mt-1 md:mt-2 text-green-500">
+            <i className="fas fa-arrow-up"></i> {stats.pagesGrowth}% from last month
+          </p>
+        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-gray-300 text-sm">
-            <thead className="border-b border-slate-600 text-gray-400 uppercase text-xs">
-              <tr>
-                <th className="py-3">Order ID</th>
-                <th className="py-3">Document</th>
-                <th className="py-3">Pages</th>
-                <th className="py-3">Amount</th>
-                <th className="py-3">Status</th>
-              </tr>
-            </thead>
+        {/* Total Spent */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-green-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-rupee-sign text-white text-base md:text-lg"></i>
+            </div>
+          </div>
+          <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Total Spent
+          </h3>
+          <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
+            {loading ? '...' : `₹${stats.totalSpent.toLocaleString()}`}
+          </p>
+          <p className="text-xs mt-1 md:mt-2 text-gray-500 dark:text-gray-400">
+            Average ₹{averagePerOrder}/order
+          </p>
+        </div>
 
-            <tbody>
-              {rows.map((row, idx) => (
-                <tr key={idx} className="border-b border-slate-700/50">
-                  <td className="py-4 font-medium text-white">{row.id}</td>
-                  <td className="py-4">{row.doc}</td>
-                  <td className="py-4">{row.pages}</td>
-                  <td className="py-4">{row.amount}</td>
-                  <td className="py-4">{badge(row.status)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Pending Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-clock text-white text-base md:text-lg"></i>
+            </div>
+          </div>
+          <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Pending Orders
+          </h3>
+          <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
+            {loading ? '...' : stats.pendingOrders}
+          </p>
+          <p className="text-xs mt-1 md:mt-2 text-yellow-600 dark:text-yellow-400">
+            {stats.readyForPickup} ready for pickup
+          </p>
         </div>
       </div>
 
-      {/* Footer */}
-      <p className="text-center text-gray-500 text-xs mt-10">
-        © 2025 PrintEase | Designed by{" "}
-        <span className="text-purple-400 font-medium">Bhavneet Verma</span>
-      </p>
+      {/* Recent Activity */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            Recent Activity
+          </h2>
+        </div>
+        
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+            No orders found
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                  <th className="px-4 md:px-6 py-3">Order ID</th>
+                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Document</th>
+                  <th className="px-4 md:px-6 py-3">Pages</th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">Amount</th>
+                  <th className="px-4 md:px-6 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order, index) => (
+                  <tr 
+                    key={index}
+                    className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <td className="px-4 md:px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {order.id}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden sm:table-cell text-gray-600 dark:text-gray-400">
+                      {order.document}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 text-gray-600 dark:text-gray-400">
+                      {order.pages}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden md:table-cell text-gray-600 dark:text-gray-400">
+                      ₹{order.amount}
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-    </div>
+      {/* Footer */}
+      <footer className="mt-8 text-center pb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          © 2025 PrintEase | Designed by{' '}
+          <span className="font-semibold text-purple-600 dark:text-purple-400">
+            Bhavneet Verma
+          </span>
+        </p>
+      </footer>
+    </main>
   );
-}
+};
+
+export default Dashboard;

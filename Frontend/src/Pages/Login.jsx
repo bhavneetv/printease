@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
 
-  const API_URL =  import.meta.env.backend_api;
+  const API_URL =  import.meta.env.VITE_API;
+  // console.log(API_URL);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -57,13 +58,14 @@ export default function Login() {
 
   // THIS IS JUST A TEST FUNCTION TO BYPASS LOGIN FOR DEV PURPOSES
   const loginTest = () => {
-    fetch('${API_URL}/backend/login.php', {
+    fetch(`${API_URL}/backend/login.php`, {
       method: "GET",
       credentials: "include",
     })
       .then((res) => res.json())
+
       .then((data) => {
-        console.log(data);
+        console.log(data.user);
 
         if (data.status === "success") {
           // Save user info session for testing
