@@ -14,7 +14,7 @@ $token = hash("sha256", $user["email"] . $secret);
 echo json_encode([
     "status" => "success",
     "user" => [
-        "id" => ($user["id"]),
+        "id" => ($user["user_id"]),
         "email" => $user["email"],
         "name" => $user["full_name"]
     ],

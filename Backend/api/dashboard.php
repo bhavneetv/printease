@@ -30,9 +30,9 @@ if ($conn->connect_error) {
 }
 
 // GET USER ID
-$u = $conn->query("SELECT id FROM users WHERE email='$email' LIMIT 1");
+$u = $conn->query("SELECT user_id FROM users WHERE email='$email' LIMIT 1");
 $user = $u->fetch_assoc();
-$userId = $user["id"];
+$userId = $user["user_id"];
 
 // TOTAL ORDERS
 $q1 = $conn->query("SELECT COUNT(*) AS total FROM orders WHERE created_by=$userId");
