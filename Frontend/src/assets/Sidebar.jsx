@@ -86,6 +86,13 @@ export default function Sidebar({ collapsed, closeSidebar }) {
             isActive={location.pathname === "/Login"}
             onClick={closeSidebar}
           />
+          <NavItem
+            to="/ShopOrderPage"
+            icon={FaSignOutAlt}
+     label=" Shop Order Page"
+            isActive={location.pathname === "/ShopOrderPage"}
+            onClick={closeSidebar}
+          />
         </nav>
       </div>
     </aside>
