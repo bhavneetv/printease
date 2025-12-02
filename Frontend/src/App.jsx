@@ -7,6 +7,7 @@ import Myorders from "./Pages/User/Myorders.jsx";
 import Profile from "./Pages/User/Profile.jsx";
 import ShopOrders from "./Pages/Shop/ShopOrders.jsx";
 import Login from "./Pages/Login.jsx";
+import ShopOrderPage from "./Pages/User/ShopOrderPage.jsx"
 
 function App() {
   // How login credentials are sent From the server
@@ -42,6 +43,10 @@ function App() {
         {
           path: "/Login",
           element: <Login />,
+        },
+        {
+          path: "/ShopOrderPage",
+          element: <ShopOrderPage />,
         },
       ],
     },
