@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +13,7 @@ const MyOrders = () => {
     completedOrders: 0,
     totalSpent: 0
   });
+  const API = import.meta.env.VITE_API;
 
   // Fetch orders from API
   useEffect(() => {
@@ -23,38 +23,63 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      let user_id = sessionStorage.getItem('user') || 0;
+
+
+      //  user_id = btoa(user_id);
+      if (user_id === 0) {
+        console.error("User ID not found");
+        setLoading(false);
+        alert("User not logged in. Please log in to view your orders. and redirecting to login page.");
+        //redirect to login page
+        window.location.href = "/login";
+        return;
+      }
       
-      // Simulated API call - Replace with your actual API endpoint
-      // const response = await fetch('https://your-api.com/api/orders');
-      // const data = await response.json();
+      user_id = JSON.parse(atob(user_id));
       
-      const simulatedData = [
-        { id: 'ORD-3847', fileName: 'Machine_Learning_Assignment.pdf', shopName: 'Print Hub', pages: 45, copies: 2, amount: 360, paymentMethod: 'UPI', paymentStatus: 'paid', orderStatus: 'completed', date: '2025-10-28' },
-        { id: 'ORD-3846', fileName: 'Data_Structures_Notes.pdf', shopName: 'Quick Print', pages: 32, copies: 1, amount: 128, paymentMethod: 'Cash', paymentStatus: 'unpaid', orderStatus: 'printing', date: '2025-10-29' },
-        { id: 'ORD-3845', fileName: 'Project_Report_Final.docx', shopName: 'Print Hub', pages: 68, copies: 1, amount: 272, paymentMethod: 'UPI', paymentStatus: 'paid', orderStatus: 'completed', date: '2025-10-27' },
-        { id: 'ORD-3844', fileName: 'Presentation_Slides.pptx', shopName: 'Express Print', pages: 15, copies: 3, amount: 180, paymentMethod: 'UPI', paymentStatus: 'paid', orderStatus: 'pending', date: '2025-10-30' },
-        { id: 'ORD-3843', fileName: 'Research_Paper.pdf', shopName: 'Quick Print', pages: 24, copies: 2, amount: 192, paymentMethod: 'Cash', paymentStatus: 'unpaid', orderStatus: 'printing', date: '2025-10-29' },
-        { id: 'ORD-3842', fileName: 'Study_Material.pdf', shopName: 'Print Hub', pages: 38, copies: 1, amount: 152, paymentMethod: 'UPI', paymentStatus: 'paid', orderStatus: 'completed', date: '2025-10-26' },
-        { id: 'ORD-3841', fileName: 'Lab_Manual.pdf', shopName: 'Express Print', pages: 52, copies: 1, amount: 208, paymentMethod: 'UPI', paymentStatus: 'paid', orderStatus: 'completed', date: '2025-10-25' },
-        { id: 'ORD-3840', fileName: 'Syllabus_2025.pdf', shopName: 'Quick Print', pages: 8, copies: 5, amount: 160, paymentMethod: 'Cash', paymentStatus: 'unpaid', orderStatus: 'pending', date: '2025-10-30' },
-      ];
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setOrders(simulatedData);
-      calculateStats(simulatedData);
+
+      // API call to PHP backend   to fetch orders
+      const response = await fetch(`${API}/api/getorderdetails.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id })
+      });
+
+      const data = await response.json();
+      // console.log("Raw response data:", data); // Debugging line
+
+      if (!data.success) {
+        console.error("Order fetch error:", data.error);
+        setLoading(false);
+        return;
+      }
+
+      // Orders from backend (same format as your simulatedData)
+      const orders = data.orders;
+
+      // Update UI
+      setOrders(orders);
+      calculateStats(orders);
+
       setLoading(false);
-    } catch (error) {
+
+    }
+    catch (error) {
       console.error('Error fetching orders:', error);
       setLoading(false);
     }
   };
 
+
+  // Calculate statistics
   const calculateStats = (ordersData) => {
     const totalOrders = ordersData.length;
-    const pendingOrders = ordersData.filter(o => o.orderStatus === 'pending').length;
-    const completedOrders = ordersData.filter(o => o.orderStatus === 'completed').length;
-    const totalSpent = ordersData.reduce((sum, o) => sum + o.amount, 0);
+    const pendingOrders = ordersData.filter(o => o.status === 'placed').length;
+    const completedOrders = ordersData.filter(o => o.status === 'completed').length;
+    const totalSpent = ordersData.reduce((sum, o) => sum + parseInt(o.payment_amount), 0);
 
     setStats({
       totalOrders,
@@ -69,15 +94,15 @@ const MyOrders = () => {
 
     // Apply status filter
     if (currentFilter !== 'all') {
-      filtered = filtered.filter(order => order.orderStatus === currentFilter);
+      filtered = filtered.filter(order => order.status === currentFilter);
     }
 
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(order =>
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.shopName.toLowerCase().includes(searchTerm.toLowerCase())
+        order.order_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.original_file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.shop_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -88,15 +113,15 @@ const MyOrders = () => {
     const classes = {
       completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
       printing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      placed: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     };
     return classes[status] || '';
   };
 
   const getPaymentStatusClass = (status) => {
     const classes = {
-      paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      unpaid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      pending: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      paid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     };
     return classes[status] || '';
   };
@@ -217,9 +242,8 @@ const MyOrders = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4 md:mb-6">
         <div className="flex flex-wrap gap-2">
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentFilter === 'all' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'all' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
             onClick={() => {
               setCurrentFilter('all');
               setDisplayedOrders(5);
@@ -228,20 +252,18 @@ const MyOrders = () => {
             All Orders
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentFilter === 'pending' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'placed' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
             onClick={() => {
-              setCurrentFilter('pending');
+              setCurrentFilter('placed');
               setDisplayedOrders(5);
             }}
           >
-            Pending
+            Placed
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentFilter === 'printing' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'printing' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
             onClick={() => {
               setCurrentFilter('printing');
               setDisplayedOrders(5);
@@ -250,9 +272,8 @@ const MyOrders = () => {
             Printing
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentFilter === 'completed' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'completed' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
             onClick={() => {
               setCurrentFilter('completed');
               setDisplayedOrders(5);
@@ -298,32 +319,32 @@ const MyOrders = () => {
                     className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {order.id}
+                      {order.order_code}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {order.fileName}
+                      {order.original_file_name}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {order.shopName}
+                      {order.shop_name}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                       {order.pages} × {order.copies}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      ₹{order.amount}
+                      ₹{order.payment_amount}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`${getPaymentStatusClass(order.paymentStatus)} text-xs px-2.5 py-1 rounded-full font-medium`}>
-                        {order.paymentMethod} - {order.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                      <span className={`${getPaymentStatusClass(order.payment_status)} text-xs px-2.5 py-1 rounded-full font-medium`}>
+                        {order.payment_type} - {order.payment_status === 'pending' ? 'Unpaid' : 'Paid'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`${getStatusClass(order.orderStatus)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
-                        {order.orderStatus}
+                      <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                        {order.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {formatDate(order.date)}
+                      {formatDate(order.created_at)}
                     </td>
                     <td className="px-6 py-4">
                       <button
@@ -361,17 +382,17 @@ const MyOrders = () => {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">{order.id}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{order.fileName}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{order.order_code}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{order.original_file_name}</p>
                 </div>
-                <span className={`${getStatusClass(order.orderStatus)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
-                  {order.orderStatus}
+                <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                  {order.status}
                 </span>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Shop:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{order.shopName}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{order.shop_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Pages × Copies:</span>
@@ -379,17 +400,17 @@ const MyOrders = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">₹{order.amount}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">₹{order.payment_amount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Payment:</span>
-                  <span className={`${getPaymentStatusClass(order.paymentStatus)} text-xs px-2.5 py-1 rounded-full font-medium`}>
-                    {order.paymentMethod} - {order.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                  <span className={`${getPaymentStatusClass(order.payment_status)} text-xs px-2.5 py-1 rounded-full font-medium`}>
+                    {order.payment_type} - {order.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Date:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatDate(order.date)}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatDate(order.created_at)}</span>
                 </div>
               </div>
               <button

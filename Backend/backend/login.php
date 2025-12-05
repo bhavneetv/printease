@@ -5,7 +5,7 @@ header("Content-Type: application/json");
 
 require_once('../config/conn.php');
 
-$q = $conn->query("SELECT * FROM users WHERE id = 1 LIMIT 1");
+$q = $conn->query("SELECT * FROM users WHERE user_id = 1 LIMIT 1");
 $user = $q->fetch_assoc();
 
 $secret = "MY_SECRET_KEY_123";

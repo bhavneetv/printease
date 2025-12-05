@@ -184,11 +184,13 @@ export default function Login() {
       credentials: "include",
     })
       .then((res) => res.json())
+
       .then((data) => {
-        console.log(data.user);
+
+        // console.log(data);
 
         if (data.status === "success") {
-          sessionStorage.setItem("user", JSON.stringify(data.user));
+          sessionStorage.setItem("user", btoa(JSON.stringify(data.user)));
           sessionStorage.setItem("token", data.token);
           console.log("Login successful!");
           setTimeout(() => {

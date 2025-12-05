@@ -10,7 +10,7 @@ export default function PrintUpload() {
   const [locationError, setLocationError] = useState('');
   const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
 
-  const API_URL = "http://localhost/printease";
+  const API_URL = import.meta.env.VITE_API;
 
   const [settings, setSettings] = useState({
     copies: 1,
@@ -18,8 +18,19 @@ export default function PrintUpload() {
     sides: 'single',
     paperSize: 'A4',
     payment: 'upi',
-    selectedShop: null
+    selectedShop: null,
+    cod: 1,
+    orderID: '',
+
   });
+  function generateRandomNumber() {
+    const prefix = "ORD-";
+    const digits = Math.floor(1000 + Math.random() * 9000).toString();
+    return prefix + digits;
+  }
+
+  settings.orderID = generateRandomNumber();
+
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
@@ -65,10 +76,18 @@ export default function PrintUpload() {
 
   const submitOrderToServer = async () => {
     const formData = new FormData();
+    let userId = atob(sessionStorage.getItem("user")) || 0;
+    if (userId === 0) {
+      // redirect to login
 
-    formData.append("user_id", 2); // dynamic later
+      return;
+    }
+    userId = JSON.parse(userId).id;
+    formData.append("user_id", userId);
     formData.append("shop_id", settings.selectedShop);
+    formData.append("order_id", settings.orderID);
     formData.append("payment_type", settings.payment);
+
 
     // File
     formData.append("file", uploadedFile);
@@ -87,18 +106,19 @@ export default function PrintUpload() {
 
     try {
       const response = await fetch(
-        `${API_URL}/Backend/backend/upload.php`,
+        `${API_URL}backend/upload.php`,
         {
           method: "POST",
           body: formData,
         }
       );
 
-      const data = await response.text();
+      const data = await response.json();
       console.log("Order submission response:", data);
 
       if (data.success) {
         alert("Order Successful! Order ID: " + data.order_id);
+        setShowModal(true);
       } else {
         alert("Order failed: " + data.message);
       }
@@ -111,7 +131,7 @@ export default function PrintUpload() {
 
   const fetchNearbyShops = async (lat, lng) => {
     try {
-      const res = await fetch(`${API_URL}/Backend/api/getShops.php`, {
+      const res = await fetch(`${API_URL}api/getShops.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat, lng }),
@@ -181,8 +201,14 @@ export default function PrintUpload() {
     handleFile(e.dataTransfer.files[0]);
   };
 
+  const setShop = (key, value, cod) => {
+
+    updateSetting(key, value);
+    codisAla(cod);
+  }
   const updateSetting = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+    // codisAla();
   };
 
   const getSelectedShopData = () => {
@@ -191,6 +217,7 @@ export default function PrintUpload() {
   };
 
   const calculatePrice = () => {
+    // setButtonCOD();
     const shopData = getSelectedShopData();
     if (!shopData) return 0;
 
@@ -203,64 +230,39 @@ export default function PrintUpload() {
     return pageCount * settings.copies * baseRate;
   };
 
-  const handleSubmit = () => {
-    if (!uploadedFile || !settings.selectedShop) {
-      alert('Please select a shop before submitting');
-      return;
+
+  const codisAla = (code) => {
+    let codCont = document.getElementById("codoption");
+
+    // Convert "0" or "1" strings into numbers if required
+    code = Number(code);
+    settings.cod = code
+
+    // console.log("COD value from shopData:", code);
+
+
+  };
+
+  const setButtonCOD = () => {
+
+    let codCont = document.getElementById("codoption");
+    if (settings.cod === 1) {
+      // COD available → enable button
+      codCont.classList.remove("opacity-50", "pointer-events-none");
+      codCont.classList.add("opacity-100", "pointer-events-auto");
+      codCont.disabled = false;
+    } else {
+      // COD not available → disable button
+      codCont.classList.remove("opacity-100", "pointer-events-auto");
+      codCont.classList.add("opacity-50", "pointer-events-none");
+      codCont.disabled = true;
     }
 
-    const shopData = getSelectedShopData();
-    const totalPrice = calculatePrice();
-    const baseRate = settings.color === 'bw' ? parseFloat(shopData.rate_bw) : parseFloat(shopData.rate_color);
-    const finalRate = settings.paperSize === 'A3' ? baseRate + 5 : baseRate;
+  }
 
-    const orderInfo = {
-      fileName: uploadedFile.name,
-      fileSize: formatFileSize(uploadedFile.size),
-      pages: pageCount,
-      copies: settings.copies,
-      totalPages: pageCount * settings.copies,
-      colorMode: settings.color === 'bw' ? 'Black & White' : 'Color',
-      printSides: settings.sides === 'single' ? 'Single-Sided' : 'Double-Sided',
-      paperSize: settings.paperSize,
-      shop: shopData.shop_name,
-      shopDistance: shopData.distance_km,
-      paymentMethod: settings.payment === 'upi' ? 'UPI Payment' : 'Cash on Pickup',
-      ratePerPage: `₹${finalRate.toFixed(2)}`,
-      totalAmount: `₹${totalPrice.toFixed(2)}`,
-      orderId: '#ORD-' + Math.floor(Math.random() * 9000 + 1000),
-      timestamp: new Date().toLocaleString()
-    };
+  // codisAla(settings.cod);
 
-    console.log('='.repeat(60));
-    console.log('📄 PRINT REQUEST DETAILS');
-    console.log('='.repeat(60));
-    console.log('Order ID:', orderInfo.orderId);
-    console.log('Timestamp:', orderInfo.timestamp);
-    console.log('\n📁 FILE INFORMATION:');
-    console.log('  • File Name:', orderInfo.fileName);
-    console.log('  • File Size:', orderInfo.fileSize);
-    console.log('  • Total Pages:', orderInfo.pages);
-    console.log('\n🖨️ PRINT SETTINGS:');
-    console.log('  • Number of Copies:', orderInfo.copies);
-    console.log('  • Total Pages to Print:', orderInfo.totalPages);
-    console.log('  • Color Mode:', orderInfo.colorMode);
-    console.log('  • Print Sides:', orderInfo.printSides);
-    console.log('  • Paper Size:', orderInfo.paperSize);
-    console.log('\n🏪 SHOP DETAILS:');
-    console.log('  • Shop Name:', orderInfo.shop);
-    console.log('  • Distance:', orderInfo.shopDistance + ' km');
-    console.log('\n💰 PAYMENT INFORMATION:');
-    console.log('  • Rate per Page:', orderInfo.ratePerPage);
-    console.log('  • Payment Method:', orderInfo.paymentMethod);
-    console.log('  • TOTAL AMOUNT:', orderInfo.totalAmount);
-    console.log('='.repeat(60));
-    console.log('\n📋 JSON FORMAT:');
-    console.log(JSON.stringify(orderInfo, null, 2));
-    console.log('='.repeat(60));
 
-    setShowModal(true);
-  };
 
   const shopData = getSelectedShopData();
   const baseRate = shopData ? (settings.color === 'bw' ? parseFloat(shopData.rate_bw) : parseFloat(shopData.rate_color)) : 0;
@@ -385,7 +387,8 @@ export default function PrintUpload() {
                   {nearbyShops.map((shop) => (
                     <div
                       key={shop.shop_id}
-                      onClick={() => updateSetting('selectedShop', shop.shop_id)}
+                      onClick={() => setShop('selectedShop', shop.shop_id, shop.cod)}
+
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.selectedShop === shop.shop_id
                         ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
                         : 'border-gray-700 hover:border-gray-600'
@@ -554,7 +557,7 @@ export default function PrintUpload() {
                     <p className="text-xs text-gray-500 mt-1">Pay via QR code</p>
                   </div>
                 </div>
-                <div
+                <div id="codoption"
                   className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${settings.payment === 'cash'
                     ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
                     : 'border-gray-700'
@@ -671,7 +674,7 @@ export default function PrintUpload() {
                   <i className="fas fa-check text-purple-600 text-3xl"></i>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Print Request Submitted!</h3>
-                <p className="text-purple-100">Your order has been successfully placed</p>
+                <p className="text-purple-100">Your order has been successfully placed <br> Get the QR code from dashboard or My Orders.</br></p>
               </div>
             </div>
 
@@ -680,7 +683,7 @@ export default function PrintUpload() {
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-gray-400 text-sm">Order ID</span>
                   <span className="font-mono font-semibold text-white">
-                    {`#ORD-${Math.floor(Math.random() * 9000 + 1000)}`}
+                    {`#${settings.orderID}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

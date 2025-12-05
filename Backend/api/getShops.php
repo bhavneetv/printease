@@ -18,7 +18,7 @@ function distance($lat1, $lon1, $lat2, $lon2) {
     return $earthRadius * (2 * atan2(sqrt($a), sqrt(1-$a)));
 }
 
-$sql = "SELECT shop_id, shop_name, rate_bw, rate_color, latitude, longitude FROM shops";
+$sql = "SELECT shop_id, shop_name, rate_bw, rate_color, latitude, longitude , cod FROM shops";
 $res = mysqli_query($conn, $sql);
 
 $shops = [];

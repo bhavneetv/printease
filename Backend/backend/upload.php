@@ -10,6 +10,7 @@ if (!isset($_FILES['file'])) {
 $user_id       = $_POST['user_id'];
 $shop_id       = $_POST['shop_id'];
 $payment_type  = $_POST['payment_type'];
+$orderCode  = $_POST['order_id'];
 
 $total_pages   = $_POST['total_pages'];
 $copies        = $_POST['copies'];
@@ -45,23 +46,32 @@ if (!move_uploaded_file($_FILES["file"]["tmp_name"], $filePath)) {
 
 $fileSize = $_FILES["file"]["size"];
 
+
+// function generate_random_number() {
+//     $prefix = "ORD-";
+//     $digits = substr(str_shuffle("0123456789"), 0, 4);
+//     return $prefix . $digits;
+// }
+
+// $orderCode = generate_random_number();
+
+
 // -------------------------
 // INSERT INTO DATABASE
 // -------------------------
 $sql = "INSERT INTO orders (
-    created_by, accepted_by_id,
+    created_by, accepted_by,
     original_file_name, stored_file_name, file_path, 
     pages, copies,
-    color_mode, print_side, paper_size,
-    rate_per_page, total_amount,
-    payment_type, payment_status, order_status
+    color_type, print_side, page_type,
+    payment_amount,
+    payment_type, payment_status, status , order_code
 ) VALUES (
     '$user_id', '$shop_id',
     '$originalName', '$storedName', '$filePath',
     '$total_pages', '$copies', 
-    '$color_mode', '$print_side', '$paper_size',
-    '$rate_per_page', '$total_amount',
-    '$payment_type', 'pending', 'placed'
+    '$color_mode', '$print_side', '$paper_size', '$total_amount',
+    '$payment_type', 'pending', 'placed' , '$orderCode'
 )";
 
 if (mysqli_query($conn, $sql)) {
