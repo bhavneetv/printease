@@ -10,7 +10,7 @@ export default function ShopOrderPage() {
   const [processing, setProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
-  
+
   const [settings, setSettings] = useState({
     copies: 1,
     color: 'bw',
@@ -18,17 +18,32 @@ export default function ShopOrderPage() {
     payment: 'cash'
   });
 
+  const API_URL = import.meta.env.VITE_API;
+
   // Extract shop code from URL parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopCode = params.get('shop');
-    
+
     if (!shopCode) {
       setError('Invalid QR Code - No shop code provided');
       setLoading(false);
       return;
     }
 
+    const fetchShopDetails = async (shop) => {
+
+      const res = await fetch(`${API_URL}api/getShops.php?shop=${shop}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify({  }),
+      });
+
+      const data = await res.json();
+    }
+
+
+    console.log("Nearby shops response:", data);
     // Simulate API fetch for shop details
     setTimeout(() => {
       // Dummy shop database
@@ -74,7 +89,7 @@ export default function ShopOrderPage() {
 
   const handleFile = (file) => {
     if (!file) return;
-    
+
     const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!validTypes.includes(file.type)) {
       alert('Please upload a PDF or DOCX file');
@@ -117,19 +132,19 @@ export default function ShopOrderPage() {
 
   const calculatePrice = () => {
     if (!shopData || !uploadedFile) return 0;
-    
+
     const rate = settings.color === 'bw' ? shopData.bwRate : shopData.colorRate;
     return pageCount * settings.copies * rate;
   };
 
   const handleSubmit = async () => {
     if (!uploadedFile) return;
-    
+
     setProcessing(true);
 
     const totalPrice = calculatePrice();
     const orderId = `ORD-${Math.floor(Math.random() * 90000) + 10000}`;
-    
+
     const order = {
       orderId,
       fileName: uploadedFile.name,
@@ -258,7 +273,7 @@ export default function ShopOrderPage() {
                 <i className="fas fa-cloud-upload-alt text-purple-600 mr-2"></i>
                 Upload Document
               </h2>
-              
+
               <div
                 className={`border-2 ${isDragOver ? 'border-purple-600 bg-purple-900/20' : 'border-dashed border-gray-600'} rounded-lg p-8 text-center cursor-pointer transition-all`}
                 onClick={() => !uploadedFile && document.getElementById('fileInput').click()}
@@ -273,7 +288,7 @@ export default function ShopOrderPage() {
                   className="hidden"
                   onChange={(e) => handleFile(e.target.files[0])}
                 />
-                
+
                 {!uploadedFile ? (
                   <div>
                     <i className="fas fa-file-upload text-5xl text-gray-400 mb-4"></i>
@@ -308,7 +323,7 @@ export default function ShopOrderPage() {
                   <i className="fas fa-cog text-purple-600 mr-2"></i>
                   Print Settings
                 </h2>
-                
+
                 <div className="space-y-6">
                   {/* Number of Copies */}
                   <div>
@@ -332,11 +347,10 @@ export default function ShopOrderPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.color === 'bw'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.color === 'bw'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('color', 'bw')}
                       >
                         <div className="text-center">
@@ -346,11 +360,10 @@ export default function ShopOrderPage() {
                         </div>
                       </div>
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.color === 'color'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.color === 'color'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('color', 'color')}
                       >
                         <div className="text-center">
@@ -369,11 +382,10 @@ export default function ShopOrderPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.sides === 'single'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.sides === 'single'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('sides', 'single')}
                       >
                         <div className="text-center">
@@ -382,11 +394,10 @@ export default function ShopOrderPage() {
                         </div>
                       </div>
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.sides === 'double'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.sides === 'double'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('sides', 'double')}
                       >
                         <div className="text-center">
@@ -404,11 +415,10 @@ export default function ShopOrderPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.payment === 'cash'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.payment === 'cash'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('payment', 'cash')}
                       >
                         <div className="text-center">
@@ -417,11 +427,10 @@ export default function ShopOrderPage() {
                         </div>
                       </div>
                       <div
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          settings.payment === 'upi'
-                            ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
-                            : 'border-gray-700 hover:border-gray-600'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.payment === 'upi'
+                          ? 'border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20'
+                          : 'border-gray-700 hover:border-gray-600'
+                          }`}
                         onClick={() => updateSetting('payment', 'upi')}
                       >
                         <div className="text-center">
@@ -443,7 +452,7 @@ export default function ShopOrderPage() {
                 <i className="fas fa-calculator text-purple-600 mr-2"></i>
                 Order Summary
               </h2>
-              
+
               {uploadedFile ? (
                 <>
                   <div className="space-y-3 mb-6">
@@ -478,14 +487,14 @@ export default function ShopOrderPage() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="border-t border-gray-700 pt-4 mb-6">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-white">Total Amount</span>
                       <span className="text-2xl font-bold text-purple-600">₹{totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={handleSubmit}
                     disabled={processing}
@@ -527,7 +536,7 @@ export default function ShopOrderPage() {
               </div>
               <h3 className="text-2xl font-bold text-center">Order Placed Successfully!</h3>
             </div>
-            
+
             <div className="p-6">
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
@@ -557,16 +566,16 @@ export default function ShopOrderPage() {
                   <span className="text-2xl font-bold text-purple-600">₹{orderDetails.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-              
+
               <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-300">
                   <i className="fas fa-info-circle mr-2"></i>
-                  {settings.payment === 'cash' 
+                  {settings.payment === 'cash'
                     ? 'Please collect your prints from the shop and pay the amount in cash.'
                     : 'Payment is required before printing. Please complete the UPI payment.'}
                 </p>
               </div>
-              
+
               <div className="flex space-x-3">
                 <button
                   onClick={resetOrder}
@@ -574,7 +583,7 @@ export default function ShopOrderPage() {
                 >
                   New Order
                 </button>
-                <button 
+                <button
                   onClick={() => setShowSuccess(false)}
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-semibold hover:shadow-lg transition"
                 >

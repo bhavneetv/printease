@@ -10,7 +10,7 @@ if (!isset($_FILES['file'])) {
 $user_id       = $_POST['user_id'];
 $shop_id       = $_POST['shop_id'];
 $payment_type  = $_POST['payment_type'];
-$orderCode  = $_POST['order_id'];
+$orderCode  =    $_POST['order_id'];
 
 $total_pages   = $_POST['total_pages'];
 $copies        = $_POST['copies'];
@@ -54,6 +54,22 @@ $fileSize = $_FILES["file"]["size"];
 // }
 
 // $orderCode = generate_random_number();
+
+$sql  = "SELECT cod FROM shops WHERE shop_id = '$shop_id'";
+$res  = mysqli_query($conn, $sql);
+$row  = mysqli_fetch_assoc($res);
+$cod  = $row['cod'];
+
+if ($cod == 1 && $payment_type == "cash") {
+    // Cash on Delivery is allowed
+} elseif ($cod == 0 && $payment_type == "cash") {
+    echo json_encode([
+        "success" => false,
+        "message" => "Cash on Delivery is not available for this shop. Please choose UPI payment."
+    ]);
+    exit;
+    
+}
 
 
 // -------------------------

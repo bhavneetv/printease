@@ -21,8 +21,11 @@ export default function PrintUpload() {
     selectedShop: null,
     cod: 1,
     orderID: '',
+    upiId: ''
 
   });
+
+  // Generate Random Order ID
   function generateRandomNumber() {
     const prefix = "ORD-";
     const digits = Math.floor(1000 + Math.random() * 9000).toString();
@@ -74,15 +77,21 @@ export default function PrintUpload() {
     );
   };
 
+
+  // Submit Order to Server
   const submitOrderToServer = async () => {
     const formData = new FormData();
-    let userId = atob(sessionStorage.getItem("user")) || 0;
+    let userId = sessionStorage.getItem("user") || 0;
+
     if (userId === 0) {
+      alert("User not logged in. Please log in to view your orders.");
+      window.location.href = "/login";
+
       // redirect to login
 
       return;
     }
-    userId = JSON.parse(userId).id;
+    userId = JSON.parse(atob(userId).id);
     formData.append("user_id", userId);
     formData.append("shop_id", settings.selectedShop);
     formData.append("order_id", settings.orderID);
@@ -120,7 +129,7 @@ export default function PrintUpload() {
         alert("Order Successful! Order ID: " + data.order_id);
         setShowModal(true);
       } else {
-        alert("Order failed: " + data.message);
+        alert("Order failed:  " + data.message);
       }
     } catch (error) {
       console.error(error);
@@ -129,6 +138,7 @@ export default function PrintUpload() {
   };
 
 
+  // Fetch Nearby Shops
   const fetchNearbyShops = async (lat, lng) => {
     try {
       const res = await fetch(`${API_URL}api/getShops.php`, {
@@ -180,6 +190,22 @@ export default function PrintUpload() {
     }
   };
 
+
+  // Check Payment Method and Proceed
+  const checkPayment = () => {
+    if (settings.payment == "cash") {
+      // console.log("Order is cash")
+      submitOrderToServer()
+
+    }
+    else{
+      // console.log("Order is UPI")
+      window.location.href = `upi://pay?pa=${ getSelectedShopData().upi_id}&pn=${getSelectedShopData().shop_name}&am=${calculatePrice()}&tn=Order-Id%20${settings.orderID}&cu=INR`
+      setTimeout(() => submitOrderToServer(), 1000);
+    }
+
+  }
+
   const removeFile = () => {
     setUploadedFile(null);
     setPageCount(0);
@@ -226,6 +252,7 @@ export default function PrintUpload() {
     if (settings.paperSize === 'A3') {
       baseRate += 5;
     }
+    
 
     return pageCount * settings.copies * baseRate;
   };
@@ -638,7 +665,7 @@ export default function PrintUpload() {
                 </div>
 
                 <button
-                  onClick={submitOrderToServer}
+                  onClick={checkPayment}
                   disabled={!uploadedFile || !settings.selectedShop}
                   className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold py-3 rounded-lg transition transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >

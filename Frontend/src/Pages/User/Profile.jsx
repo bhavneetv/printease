@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 const ProfileSettings = () => {
+  let api = import.meta.env.VITE_API;
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [profileData, setProfileData] = useState({
-    fullName: '',
+    full_name: '',
     email: '',
     phone: '',
     address: '',
@@ -14,7 +15,8 @@ const ProfileSettings = () => {
     upiId: '',
     profileImage: '',
     totalOrders: 0,
-    totalSpent: 0
+    totalSpent: 0,
+    crea: ''
   });
   const [errors, setErrors] = useState({});
   const [passwordData, setPasswordData] = useState({
@@ -28,29 +30,38 @@ const ProfileSettings = () => {
     fetchProfileData();
   }, []);
 
+  const checkSession = () => {
+    let user = sessionStorage.getItem('user') || 0;
+    if (user == 0) {
+      window.location.href = '/login';
+      return false;
+    }
+    user = atob(user);
+    user = JSON.parse(user).id;
+    return user;
+    // console.log("User ID from session:", user);
+  };
+  checkSession();
+
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      
-      // Simulated API call - Replace with your actual API endpoint
-      // const response = await fetch('https://your-api.com/api/profile');
-      // const data = await response.json();
-      
-      const simulatedData = {
-        fullName: 'Bhavneet Verma',
-        email: 'bhavneet@email.com',
-        phone: '+91 98765 43210',
-        address: 'Ambala, Haryana, India',
-        paymentMode: 'upi',
-        upiId: 'bhavneet@upi',
-        profileImage: 'https://ui-avatars.com/api/?name=Bhavneet+Verma&background=667eea&color=fff&bold=true&size=120',
-        totalOrders: 248,
-        totalSpent: 4285
-      };
-      
+
+      const formData = new FormData();
+      formData.append("user_id", checkSession());
+
+      const res = await fetch(`${api}api/fetchProfile.php`, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      // console.log("Raw profile data:", data); // Debugging line
+
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setProfileData(simulatedData);
+
+      setProfileData(data.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -61,7 +72,7 @@ const ProfileSettings = () => {
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setProfileData(prev => ({ ...prev, [id]: value }));
-    
+
     // Clear error when user starts typing
     if (errors[id]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
@@ -236,12 +247,7 @@ const ProfileSettings = () => {
                     className="w-30 h-30 rounded-full border-4 border-white dark:border-gray-800 shadow-lg"
                     alt="Profile"
                   />
-                  <div
-                    onClick={() => document.getElementById('imageUpload').click()}
-                    className="absolute bottom-0 right-0 gradient-bg w-9 h-9 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform border-3 border-white dark:border-gray-800"
-                  >
-                    <i className="fas fa-camera text-white text-sm"></i>
-                  </div>
+                  
                   <input
                     type="file"
                     id="imageUpload"
@@ -271,7 +277,7 @@ const ProfileSettings = () => {
                   </div>
                   <div className="flex items-center text-sm">
                     <i className="fas fa-calendar w-5 text-gray-400"></i>
-                    <span className="ml-3 text-gray-600 dark:text-gray-400">Joined Jan 2024</span>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">{profileData.crea}</span>
                   </div>
                   <div className="flex items-center text-sm">
                     <i className="fas fa-map-marker-alt w-5 text-gray-400"></i>
@@ -291,7 +297,7 @@ const ProfileSettings = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                        {loading ? '...' : `₹${profileData.totalSpent.toLocaleString()}`}
+                        {loading ? '...' : `₹${profileData.totalSpent}`}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Total Spent</p>
                     </div>
@@ -325,9 +331,8 @@ const ProfileSettings = () => {
                   id="fullName"
                   value={profileData.fullName}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
-                    errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.fullName && (
                   <p className="text-red-500 text-xs mt-1 error-shake">{errors.fullName}</p>
@@ -344,9 +349,8 @@ const ProfileSettings = () => {
                   id="email"
                   value={profileData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
-                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.email && (
                   <p className="text-red-500 text-xs mt-1 error-shake">{errors.email}</p>
@@ -363,9 +367,8 @@ const ProfileSettings = () => {
                   id="phone"
                   value={profileData.phone}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
-                    errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.phone && (
                   <p className="text-red-500 text-xs mt-1 error-shake">{errors.phone}</p>
@@ -386,40 +389,7 @@ const ProfileSettings = () => {
                 ></textarea>
               </div>
 
-              {/* Payment Preferences */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <i className="fas fa-wallet mr-2 text-gray-400"></i>Preferred Payment Mode
-                  </label>
-                  <select
-                    id="paymentMode"
-                    value={profileData.paymentMode}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-                  >
-                    <option value="upi">UPI</option>
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                  </select>
-                </div>
-
-                {profileData.paymentMode === 'upi' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <i className="fas fa-mobile-alt mr-2 text-gray-400"></i>UPI ID
-                    </label>
-                    <input
-                      type="text"
-                      id="upiId"
-                      value={profileData.upiId}
-                      onChange={handleInputChange}
-                      placeholder="yourname@upi"
-                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
-                    />
-                  </div>
-                )}
-              </div>
+            
 
               {/* Save Button */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
