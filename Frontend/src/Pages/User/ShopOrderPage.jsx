@@ -31,19 +31,19 @@ export default function ShopOrderPage() {
       return;
     }
 
-    const fetchShopDetails = async (shop) => {
+    // const fetchShopDetails = async (shop) => {
 
-      const res = await fetch(`${API_URL}api/getShops.php?shop=${shop}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify({  }),
-      });
+    //   const res = await fetch(`${API_URL}api/getShops.php?shop=${shop}`, {
+    //     method: "GET",
+    //     headers: { "Content-Type": "application/json" },
+    //     // body: JSON.stringify({  }),
+    //   });
 
-      const data = await res.json();
-    }
+    //   const data = await res.json();
+    // }
 
 
-    console.log("Nearby shops response:", data);
+    // console.log("Nearby shops response:", data);
     // Simulate API fetch for shop details
     setTimeout(() => {
       // Dummy shop database
