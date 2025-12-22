@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -10,8 +10,26 @@ const Dashboard = () => {
     pendingOrders: 0,
     readyForPickup: 0,
     ordersGrowth: 0,
-    pagesGrowth: 0
+    pagesGrowth: 0,
   });
+
+  const API = import.meta.env.VITE_API;
+
+  let user_id = sessionStorage.getItem("user") || 0;
+
+  //  user_id = btoa(user_id);
+  if (user_id === 0) {
+    console.error("User ID not found");
+    setLoading(false);
+    alert(
+      "User not logged in. Please log in to view your orders. and redirecting to login page."
+    );
+    //redirect to login page
+    window.location.href = "/login";
+    return;
+  }
+
+  user_id = JSON.parse(atob(user_id));
 
   // Fetch orders from API
   useEffect(() => {
@@ -21,28 +39,70 @@ const Dashboard = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      
+
       // Simulated API call - Replace this URL with your actual API endpoint
       // const response = await fetch('https://your-api.com/api/orders');
       // const data = await response.json();
-      
+      const response = await fetch(API + "api/dashboard.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: 1,
+        }),
+      });
+
+      const data = await response.json(); // use json, not text
+      console.log(data);
+
       // Simulated data for demonstration
       const simulatedData = [
-        { id: '#ORD-2847', document: 'Assignment.pdf', pages: 24, amount: 96, status: 'completed' },
-        { id: '#ORD-2846', document: 'Notes.pdf', pages: 15, amount: 60, status: 'processing' },
-        { id: '#ORD-2845', document: 'Report.docx', pages: 42, amount: 168, status: 'completed' },
-        { id: '#ORD-2844', document: 'Presentation.pptx', pages: 8, amount: 32, status: 'pending' },
-        { id: '#ORD-2843', document: 'Syllabus.pdf', pages: 6, amount: 24, status: 'completed' }
+        {
+          id: "#ORD-2847",
+          document: "Assignment.pdf",
+          pages: 24,
+          amount: 96,
+          status: "completed",
+        },
+        {
+          id: "#ORD-2846",
+          document: "Notes.pdf",
+          pages: 15,
+          amount: 60,
+          status: "processing",
+        },
+        {
+          id: "#ORD-2845",
+          document: "Report.docx",
+          pages: 42,
+          amount: 168,
+          status: "completed",
+        },
+        {
+          id: "#ORD-2844",
+          document: "Presentation.pptx",
+          pages: 8,
+          amount: 32,
+          status: "pending",
+        },
+        {
+          id: "#ORD-2843",
+          document: "Syllabus.pdf",
+          pages: 6,
+          amount: 24,
+          status: "completed",
+        },
       ];
-      
+
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setOrders(simulatedData);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setOrders(data.recent_activity);
       calculateStats(simulatedData);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error("Error fetching orders:", error);
       setLoading(false);
     }
   };
@@ -50,11 +110,16 @@ const Dashboard = () => {
   // Calculate statistics from orders
   const calculateStats = (ordersData) => {
     const totalOrders = ordersData.length;
-    const pagesPrinted = ordersData.reduce((sum, order) => sum + order.pages, 0);
+    const pagesPrinted = ordersData.reduce(
+      (sum, order) => sum + order.pages,
+      0
+    );
     const totalSpent = ordersData.reduce((sum, order) => sum + order.amount, 0);
-    const pendingOrders = ordersData.filter(order => order.status === 'pending').length;
-    const readyForPickup = ordersData.filter(order => 
-      order.status === 'completed' || order.status === 'processing'
+    const pendingOrders = ordersData.filter(
+      (order) => order.status === "pending"
+    ).length;
+    const readyForPickup = ordersData.filter(
+      (order) => order.status === "completed" || order.status === "processing"
     ).length;
 
     // Simulated growth percentages (replace with actual calculation from database)
@@ -68,22 +133,26 @@ const Dashboard = () => {
       pendingOrders,
       readyForPickup,
       ordersGrowth,
-      pagesGrowth
+      pagesGrowth,
     });
   };
 
   const getStatusClass = (status) => {
     const classes = {
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      processing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     };
-    return classes[status] || '';
+    return classes[status] || "";
   };
 
-  const averagePerOrder = stats.totalOrders > 0 
-    ? (stats.totalSpent / stats.totalOrders).toFixed(2) 
-    : 0;
+  const averagePerOrder =
+    stats.totalOrders > 0
+      ? (stats.totalSpent / stats.totalOrders).toFixed(2)
+      : 0;
 
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -116,10 +185,11 @@ const Dashboard = () => {
             Total Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.totalOrders}
+            {loading ? "..." : stats.totalOrders}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-green-500">
-            <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}% from last month
+            <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}% from last
+            month
           </p>
         </div>
 
@@ -134,10 +204,11 @@ const Dashboard = () => {
             Pages Printed
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.pagesPrinted.toLocaleString()}
+            {loading ? "..." : stats.pagesPrinted.toLocaleString()}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-green-500">
-            <i className="fas fa-arrow-up"></i> {stats.pagesGrowth}% from last month
+            <i className="fas fa-arrow-up"></i> {stats.pagesGrowth}% from last
+            month
           </p>
         </div>
 
@@ -152,7 +223,7 @@ const Dashboard = () => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : `₹${stats.totalSpent.toLocaleString()}`}
+            {loading ? "..." : `₹${stats.totalSpent.toLocaleString()}`}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-gray-500 dark:text-gray-400">
             Average ₹{averagePerOrder}/order
@@ -170,7 +241,7 @@ const Dashboard = () => {
             Pending Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.pendingOrders}
+            {loading ? "..." : stats.pendingOrders}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-yellow-600 dark:text-yellow-400">
             {stats.readyForPickup} ready for pickup
@@ -185,11 +256,13 @@ const Dashboard = () => {
             Recent Activity
           </h2>
         </div>
-        
+
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
           </div>
         ) : orders.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -201,15 +274,19 @@ const Dashboard = () => {
               <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                   <th className="px-4 md:px-6 py-3">Order ID</th>
-                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Document</th>
+                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">
+                    Document
+                  </th>
                   <th className="px-4 md:px-6 py-3">Pages</th>
-                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">Amount</th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Amount
+                  </th>
                   <th className="px-4 md:px-6 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order, index) => (
-                  <tr 
+                  <tr
                     key={index}
                     className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
@@ -226,7 +303,11 @@ const Dashboard = () => {
                       ₹{order.amount}
                     </td>
                     <td className="px-4 md:px-6 py-4">
-                      <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                      <span
+                        className={`${getStatusClass(
+                          order.status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
                         {order.status}
                       </span>
                     </td>
@@ -241,7 +322,7 @@ const Dashboard = () => {
       {/* Footer */}
       <footer className="mt-8 text-center pb-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          © 2025 PrintEase | Designed by{' '}
+          © 2025 PrintEase | Designed by{" "}
           <span className="font-semibold text-purple-600 dark:text-purple-400">
             Bhavneet Verma
           </span>

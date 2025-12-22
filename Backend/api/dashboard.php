@@ -9,33 +9,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Read JSON input
 $data = json_decode(file_get_contents("php://input"), true);
 
-$email = $data["email"] ?? "";
+$userId= $data["user_id"] ?? "";
 $token = $data["token"] ?? "";
 
 // SECRET KEY (must match login.php key)
 $secret = "MY_SECRET_KEY_123";
 
 // Re-create token to verify user
-$realToken = hash("sha256", $email . $secret);
+// $realToken = hash("sha256", $email . $secret);
 
-if ($token !== $realToken) {
-    echo json_encode(["status" => "error", "message" => "Invalid token"]);
-    exit;
-}
+// if ($token !== $realToken) {
+//     echo json_encode(["status" => "error", "message" => "Invalid token"]);
+//     exit;
+// }
 
-// DB CONNECT
-if ($conn->connect_error) {
-    echo json_encode(["status" => "error", "message" => "DB connection failed"]);
-    exit;
-}
+// // DB CONNECT
+// if ($conn->connect_error) {
+//     echo json_encode(["status" => "error", "message" => "DB connection failed"]);
+//     exit;
+// }
 
 // GET USER ID
-$u = $conn->query("SELECT user_id FROM users WHERE email='$email' LIMIT 1");
-$user = $u->fetch_assoc();
-$userId = $user["user_id"];
+// $u = $conn->query("SELECT user_id FROM users WHERE ='$email' LIMIT 1");
+// $user = $u->fetch_assoc();
+// $userId = $user["user_id"];
 
 // TOTAL ORDERS
-$q1 = $conn->query("SELECT COUNT(*) AS total FROM orders WHERE created_by=$userId");
+$q1 = $conn->query("SELECT COUNT(*) AS total FROM orders WHERE created_by = $userId");
 $totalOrders = $q1->fetch_assoc()["total"];
 
 // PENDING ORDERS
@@ -47,10 +47,10 @@ $q3 = $conn->query("SELECT SUM(payment_amount) AS spent FROM orders WHERE create
 $spent = $q3->fetch_assoc()["spent"] ?? 0;
     
 $recent = [];
-$q4 = $conn->query("SELECT id, file_name, pages, payment_amount, status 
+$q4 = $conn->query("SELECT order_code, original_file_name, pages, payment_amount, status 
                     FROM orders 
                     WHERE created_by=$userId 
-                    ORDER BY id DESC 
+                    ORDER BY order_id DESC 
                     LIMIT 6");
 
 while ($row = $q4->fetch_assoc()) {
