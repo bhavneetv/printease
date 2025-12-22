@@ -8,6 +8,9 @@ import Profile from "./Pages/User/Profile.jsx";
 import ShopOrders from "./Pages/Shop/ShopOrders.jsx";
 import Login from "./Pages/Login.jsx";
 import ShopOrderPage from "./Pages/User/ShopOrderPage.jsx"
+import ShopDashboard from "./Pages/Shop/ShopDashboard.jsx";
+import { InventoryPage } from "./Pages/Shop/InventoryPage.jsx";
+import { OrderDetailsPage } from "./Pages/Shop/OrderDetailsPage.jsx";
 
 function App() {
   // How login credentials are sent From the server
@@ -47,6 +50,18 @@ function App() {
         {
           path: "/ShopOrderPage",
           element: <ShopOrderPage />,
+        },
+        {
+          path: "/ShopDashboard",
+          element: <ShopDashboard />,
+        },
+        {
+          path: "/InventoryPage",
+          element: <InventoryPage />,
+        },
+        {
+          path: "/OrderDetailsPage",
+          element: <OrderDetailsPage />,
         },
       ],
     },
