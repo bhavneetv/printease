@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, ShoppingCart, Package, Users, BarChart3, Search, Bell } from 'lucide-react';
 import { useEffect , useState } from 'react';
-import axios from axios
+import axios from "axios"
 import { useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value, change, isPositive }) => (
@@ -48,7 +48,7 @@ useEffect(() => {
 
     })
     }
-    doublechecking()
+    // doublechecking()
 }, [])
 
 
