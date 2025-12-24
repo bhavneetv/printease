@@ -53,7 +53,7 @@ export default function Login() {
   }, []);
 
   if (sessionStorage.getItem("user")) {
-    navigate("/Dashboard");
+    navigate("/");
   }
 
   // Form state
