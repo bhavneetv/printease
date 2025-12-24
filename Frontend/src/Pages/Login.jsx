@@ -175,9 +175,9 @@ export default function Login() {
       if (data.user.role === "shop") {
         navigate("/Shopdashboard");
       } else if (data.user.role === "admin") {
-        navigate("/dashboard");
+        navigate("/");
       } else {
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (error) {
       console.error("Login error:", error);
