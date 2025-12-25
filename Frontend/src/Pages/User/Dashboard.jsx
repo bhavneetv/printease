@@ -36,6 +36,8 @@ const Dashboard = () => {
     fetchOrders();
   }, []);
 
+const [lenght, setlenght] = useState()
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -98,6 +100,7 @@ const Dashboard = () => {
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
+      setlenght(data.cards);
       setOrders(data.recent_activity);
       calculateStats(simulatedData);
       setLoading(false);
@@ -185,7 +188,7 @@ const Dashboard = () => {
             Total Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.totalOrders}
+            {loading ? "..." : lenght.total_orders}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-green-500">
             <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}% from last
@@ -223,7 +226,7 @@ const Dashboard = () => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : `₹${stats.totalSpent.toLocaleString()}`}
+            {loading ? "..." : `₹${lenght.total_spent.toLocaleString()}`}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-gray-500 dark:text-gray-400">
             Average ₹{averagePerOrder}/order
@@ -241,7 +244,7 @@ const Dashboard = () => {
             Pending Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.pendingOrders}
+            {loading ? "..." : lenght.pending_orders}
           </p>
           <p className="text-xs mt-1 md:mt-2 text-yellow-600 dark:text-yellow-400">
             {stats.readyForPickup} ready for pickup
@@ -291,24 +294,25 @@ const Dashboard = () => {
                     className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <td className="px-4 md:px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {order.id}
+                      {order.order_code}
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden sm:table-cell text-gray-600 dark:text-gray-400">
-                      {order.document}
+                      {order.original_file_name}
                     </td>
                     <td className="px-4 md:px-6 py-4 text-gray-600 dark:text-gray-400">
                       {order.pages}
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden md:table-cell text-gray-600 dark:text-gray-400">
-                      ₹{order.amount}
+                      ₹{order.payment_amount}
                     </td>
                     <td className="px-4 md:px-6 py-4">
                       <span
                         className={`${getStatusClass(
                           order.status
-                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                        )} text-xs px-2.5 text-yellow-600 py-1 rounded-full font-medium capitalize`}
                       >
-                        {order.status}
+                        {order.status
+}
                       </span>
                     </td>
                   </tr>
