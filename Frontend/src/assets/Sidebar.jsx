@@ -1,5 +1,6 @@
 // src/components/Sidebar.jsx
 import React from "react";
+import { logout } from "./logout";
 import {
   FaPrint,
   FaHome,
@@ -8,7 +9,7 @@ import {
   FaCreditCard,
   FaUser,
   FaSignOutAlt,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
@@ -28,11 +29,9 @@ export default function Sidebar({ collapsed, closeSidebar }) {
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
               <FaPrint className="text-white text-lg" />
             </div>
-            <span className="text-xl font-bold text-white">
-              PrintEase
-            </span>
+            <span className="text-xl font-bold text-white">PrintEase</span>
           </div>
-          
+
           {/* Close button for mobile */}
           <button
             onClick={closeSidebar}
@@ -80,16 +79,25 @@ export default function Sidebar({ collapsed, closeSidebar }) {
             onClick={closeSidebar}
           />
           <NavItem
-            to="/Login"
+            style={{ display: user ? "none" : "block" }}
+            to="/login"
             icon={FaSignOutAlt}
             label={user ? "Logout" : "Login"}
             isActive={location.pathname === "/Login"}
             onClick={closeSidebar}
           />
+
+          <NavItem
+            style={{ display: user ? "block" : "none" }}
+            icon={FaSignOutAlt}
+            label={"Logout"}
+            isActive={location.pathname === "/Logout"}
+            onClick={logout}
+          />
           <NavItem
             to="/ShopOrderPage"
             icon={FaSignOutAlt}
-     label=" Shop Order Page"
+            label=" Shop Order Page"
             isActive={location.pathname === "/ShopOrderPage"}
             onClick={closeSidebar}
           />
@@ -113,7 +121,7 @@ function NavItem({ to, icon: Icon, label, isActive, onClick }) {
       >
         <Icon className="w-5 h-5" />
         <span className="ml-3 font-medium">{label}</span>
-        
+
         {/* Hover indicator bar */}
         {!isActive && (
           <div className="ml-auto w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-600 group-hover:w-2 transition-all duration-200 rounded-full" />
