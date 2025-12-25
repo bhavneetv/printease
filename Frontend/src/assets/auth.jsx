@@ -1,18 +1,28 @@
-export const isLoggedIn = (page) => {
-  // const login = localStorage.getItem("isLogin");
-  const user = sessionStorage.getItem("user") || null;
+export const isLoggedIn = (pageRole = null) => {
+  const user = sessionStorage.getItem("user");
 
   if (!user) {
-    return null;
+    logout();
+    return false;
   }
 
-  const userData = JSON.parse(atob(user));
-  if (page == "shop" && userData.role != "shopkeeper") {
-    return null;
+  let userData;
+  try {
+    userData = JSON.parse(atob(user));
+  } catch (e) {
+    logout();
+    return false;
   }
-  if (page == "admin" && userData.role != "admin") {
-    return null;
-  } else {
-    return userData.id;
+
+  if (pageRole && userData.role !== pageRole) {
+    logout();
+    return false;
   }
+
+  return userData.id;
+};
+
+const logout = () => {
+  sessionStorage.clear();
+  window.location.replace("/login");
 };

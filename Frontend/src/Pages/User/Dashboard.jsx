@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
 
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -15,94 +16,40 @@ const Dashboard = () => {
 
   const API = import.meta.env.VITE_API;
 
-  let user_id = sessionStorage.getItem("user") || 0;
-
-  //  user_id = btoa(user_id);
-  if (user_id === 0) {
-    console.error("User ID not found");
-    setLoading(false);
-    alert(
-      "User not logged in. Please log in to view your orders. and redirecting to login page."
-    );
-    //redirect to login page
+  if (!isLoggedIn("user")) {
     window.location.href = "/login";
-    return;
+    // console.log("f")
   }
-
-  user_id = JSON.parse(atob(user_id));
-
+  const user_idt = isLoggedIn("user");
+  
   // Fetch orders from API
   useEffect(() => {
     fetchOrders();
   }, []);
 
-const [lenght, setlenght] = useState()
+  const [lenght, setlenght] = useState();
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-
-      // Simulated API call - Replace this URL with your actual API endpoint
-      // const response = await fetch('https://your-api.com/api/orders');
-      // const data = await response.json();
       const response = await fetch(API + "api/dashboard.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: 1,
+          user_id: user_idt,
         }),
       });
 
-      const data = await response.json(); // use json, not text
-      console.log(data);
-
-      // Simulated data for demonstration
-      const simulatedData = [
-        {
-          id: "#ORD-2847",
-          document: "Assignment.pdf",
-          pages: 24,
-          amount: 96,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2846",
-          document: "Notes.pdf",
-          pages: 15,
-          amount: 60,
-          status: "processing",
-        },
-        {
-          id: "#ORD-2845",
-          document: "Report.docx",
-          pages: 42,
-          amount: 168,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2844",
-          document: "Presentation.pptx",
-          pages: 8,
-          amount: 32,
-          status: "pending",
-        },
-        {
-          id: "#ORD-2843",
-          document: "Syllabus.pdf",
-          pages: 6,
-          amount: 24,
-          status: "completed",
-        },
-      ];
-
+      const data = await response.json(); 
+      // console.log(data);
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setlenght(data.cards);
       setOrders(data.recent_activity);
-      calculateStats(simulatedData);
+      calculateStats(data.recent_activity);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -112,7 +59,7 @@ const [lenght, setlenght] = useState()
 
   // Calculate statistics from orders
   const calculateStats = (ordersData) => {
-    const totalOrders = ordersData.length;
+    const totalOrders = ordersData.length || 0;
     const pagesPrinted = ordersData.reduce(
       (sum, order) => sum + order.pages,
       0
@@ -311,8 +258,7 @@ const [lenght, setlenght] = useState()
                           order.status
                         )} text-xs px-2.5 text-yellow-600 py-1 rounded-full font-medium capitalize`}
                       >
-                        {order.status
-}
+                        {order.status}
                       </span>
                     </td>
                   </tr>

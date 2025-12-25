@@ -3,18 +3,19 @@ import { isLoggedIn } from "../../assets/auth";
 import { Navigate } from "react-router-dom";
 
 const ShopDashboard = () => {
-  if(!isLoggedIn("shop")){
-    return <Navigate to="/login" />;
-  }
+  // useEffect(() => {
+  //   const user_id= isLoggedIn("shopkeeper");
+  
+  // }, []);
 
-  const user_id = isLoggedIn("shop");
+  const user_id = isLoggedIn("shopkeeper");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
   const [shopInfo, setShopInfo] = useState({
     name: "PrintEase Shop",
     status: "open",
-    queueSize: 0
+    queueSize: 0,
   });
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -24,13 +25,10 @@ const ShopDashboard = () => {
     todayOrders: 0,
     totalEarnings: 0,
     earningsGrowth: 0,
-    ordersGrowth: 0
+    ordersGrowth: 0,
   });
 
-
-
-  const API = import.meta.env.VITE_API ;
-
+  const API = import.meta.env.VITE_API;
 
   // Fetch shop data from API
   useEffect(() => {
@@ -48,7 +46,7 @@ const ShopDashboard = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id:user_id,
+          user_id: user_id,
         }),
       });
 
@@ -73,7 +71,7 @@ const ShopDashboard = () => {
             payment_status: "paid",
             status: "printing",
             customer: "Rahul Sharma",
-            time: "10 mins ago"
+            time: "10 mins ago",
           },
           {
             id: "#ORD-2849",
@@ -84,7 +82,7 @@ const ShopDashboard = () => {
             payment_status: "pending",
             status: "pending",
             customer: "Priya Singh",
-            time: "25 mins ago"
+            time: "25 mins ago",
           },
           {
             id: "#ORD-2848",
@@ -95,7 +93,7 @@ const ShopDashboard = () => {
             payment_status: "paid",
             status: "completed",
             customer: "Amit Kumar",
-            time: "1 hour ago"
+            time: "1 hour ago",
           },
           {
             id: "#ORD-2847",
@@ -106,7 +104,7 @@ const ShopDashboard = () => {
             payment_status: "paid",
             status: "printing",
             customer: "Sneha Patel",
-            time: "2 hours ago"
+            time: "2 hours ago",
           },
           {
             id: "#ORD-2846",
@@ -117,7 +115,7 @@ const ShopDashboard = () => {
             payment_status: "paid",
             status: "completed",
             customer: "Vikram Mehta",
-            time: "3 hours ago"
+            time: "3 hours ago",
           },
           {
             id: "#ORD-2845",
@@ -128,8 +126,8 @@ const ShopDashboard = () => {
             payment_status: "paid",
             status: "completed",
             customer: "Anjali Reddy",
-            time: "4 hours ago"
-          }
+            time: "4 hours ago",
+          },
         ];
 
         setOrders(simulatedOrders);
@@ -139,7 +137,7 @@ const ShopDashboard = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching shop data:", error);
-      
+
       // Fallback to simulated data on error
       const simulatedOrders = [
         {
@@ -151,7 +149,7 @@ const ShopDashboard = () => {
           payment_status: "paid",
           status: "printing",
           customer: "Rahul Sharma",
-          time: "10 mins ago"
+          time: "10 mins ago",
         },
         {
           id: "#ORD-2849",
@@ -162,7 +160,7 @@ const ShopDashboard = () => {
           payment_status: "pending",
           status: "pending",
           customer: "Priya Singh",
-          time: "25 mins ago"
+          time: "25 mins ago",
         },
         {
           id: "#ORD-2848",
@@ -173,10 +171,10 @@ const ShopDashboard = () => {
           payment_status: "paid",
           status: "completed",
           customer: "Amit Kumar",
-          time: "1 hour ago"
-        }
+          time: "1 hour ago",
+        },
       ];
-      
+
       setOrders(simulatedOrders);
       calculateStats(simulatedOrders);
       setLoading(false);
@@ -185,18 +183,27 @@ const ShopDashboard = () => {
 
   const calculateStats = (ordersData) => {
     const totalOrders = ordersData.length;
-    const pendingRequests = ordersData.filter(o => o.status === "pending").length;
-    const printingOrders = ordersData.filter(o => o.status === "printing").length;
-    const completedOrders = ordersData.filter(o => o.status === "completed").length;
-    
+    const pendingRequests = ordersData.filter(
+      (o) => o.status === "pending"
+    ).length;
+    const printingOrders = ordersData.filter(
+      (o) => o.status === "printing"
+    ).length;
+    const completedOrders = ordersData.filter(
+      (o) => o.status === "completed"
+    ).length;
+
     // Calculate today's orders (simulated - in real app, check date)
     const todayOrders = Math.floor(totalOrders * 0.4);
-    
-    const totalEarnings = ordersData.reduce((sum, order) => sum + order.amount, 0);
-    
+
+    const totalEarnings = ordersData.reduce(
+      (sum, order) => sum + order.amount,
+      0
+    );
+
     const earningsGrowth = 15;
     const ordersGrowth = 12;
-    
+
     const queueSize = pendingRequests + printingOrders;
 
     setStats({
@@ -207,20 +214,22 @@ const ShopDashboard = () => {
       todayOrders,
       totalEarnings,
       earningsGrowth,
-      ordersGrowth
+      ordersGrowth,
     });
 
-    setShopInfo(prev => ({
+    setShopInfo((prev) => ({
       ...prev,
-      queueSize
+      queueSize,
     }));
   };
 
   const getStatusClass = (status) => {
     const classes = {
-      completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
       printing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     };
     return classes[status] || "";
   };
@@ -243,14 +252,15 @@ const ShopDashboard = () => {
     // Trigger print job
   };
 
-  const filteredOrders = filterStatus === "all" 
-    ? orders 
-    : orders.filter(order => order.status === filterStatus);
+  const filteredOrders =
+    filterStatus === "all"
+      ? orders
+      : orders.filter((order) => order.status === filterStatus);
 
   const toggleShopStatus = () => {
-    setShopInfo(prev => ({
+    setShopInfo((prev) => ({
       ...prev,
-      status: prev.status === "open" ? "closed" : "open"
+      status: prev.status === "open" ? "closed" : "open",
     }));
   };
 
@@ -274,7 +284,9 @@ const ShopDashboard = () => {
         </div>
         <div className="mt-4 md:mt-0 flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Status:
+            </span>
             <button
               onClick={toggleShopStatus}
               className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
@@ -305,7 +317,9 @@ const ShopDashboard = () => {
               <i className="fas fa-shopping-cart text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Orders</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Total Orders
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.totalOrders}
           </p>
@@ -321,7 +335,9 @@ const ShopDashboard = () => {
               <i className="fas fa-clock text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Pending</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Pending
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.pendingRequests}
           </p>
@@ -335,7 +351,9 @@ const ShopDashboard = () => {
               <i className="fas fa-print text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Printing</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Printing
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.printingOrders}
           </p>
@@ -349,7 +367,9 @@ const ShopDashboard = () => {
               <i className="fas fa-check-circle text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Completed</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Completed
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.completedOrders}
           </p>
@@ -363,7 +383,9 @@ const ShopDashboard = () => {
               <i className="fas fa-calendar-day text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Today</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Today
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.todayOrders}
           </p>
@@ -377,7 +399,9 @@ const ShopDashboard = () => {
               <i className="fas fa-rupee-sign text-white text-sm"></i>
             </div>
           </div>
-          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">Earnings</h3>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Earnings
+          </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : `₹${stats.totalEarnings.toLocaleString()}`}
           </p>
@@ -393,7 +417,7 @@ const ShopDashboard = () => {
           <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
             Recent Orders
           </h2>
-          
+
           {/* Filter Buttons */}
           <div className="flex gap-2 flex-wrap">
             <button
@@ -442,7 +466,9 @@ const ShopDashboard = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -454,11 +480,19 @@ const ShopDashboard = () => {
               <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                   <th className="px-4 md:px-6 py-3">Order ID</th>
-                  <th className="px-4 md:px-6 py-3 hidden lg:table-cell">Customer</th>
-                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Document</th>
+                  <th className="px-4 md:px-6 py-3 hidden lg:table-cell">
+                    Customer
+                  </th>
+                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">
+                    Document
+                  </th>
                   <th className="px-4 md:px-6 py-3">Pages</th>
-                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">Payment</th>
-                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">Pay Status</th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Payment
+                  </th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Pay Status
+                  </th>
                   <th className="px-4 md:px-6 py-3">Status</th>
                   <th className="px-4 md:px-6 py-3">Actions</th>
                 </tr>
@@ -495,12 +529,20 @@ const ShopDashboard = () => {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden md:table-cell">
-                      <span className={`${getPaymentStatusClass(order.payment_status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                      <span
+                        className={`${getPaymentStatusClass(
+                          order.payment_status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
                         {order.payment_status}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-4">
-                      <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                      <span
+                        className={`${getStatusClass(
+                          order.status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
                         {order.status}
                       </span>
                     </td>

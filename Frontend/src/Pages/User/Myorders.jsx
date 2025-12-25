@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentFilter, setCurrentFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [currentFilter, setCurrentFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [displayedOrders, setDisplayedOrders] = useState(5);
   const [showModal, setShowModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState("");
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
     completedOrders: 0,
-    totalSpent: 0
+    totalSpent: 0,
   });
   const API = import.meta.env.VITE_API;
+
+  if (!isLoggedIn("user")) {
+    window.location.href("/login");
+  }
+
+  const user_id = isLoggedIn("user");
 
   // Fetch orders from API
   useEffect(() => {
@@ -23,29 +30,14 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      let user_id = sessionStorage.getItem('user') || 0;
-
-
-      //  user_id = btoa(user_id);
-      if (user_id === 0) {
-        console.error("User ID not found");
-        setLoading(false);
-        alert("User not logged in. Please log in to view your orders. and redirecting to login page.");
-        //redirect to login page
-        window.location.href = "/login";
-        return;
-      }
-      
-      user_id = JSON.parse(atob(user_id));
-      
 
       // API call to PHP backend   to fetch orders
       const response = await fetch(`${API}/api/getorderdetails.php`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_id })
+        body: JSON.stringify({ user_id }),
       });
 
       const data = await response.json();
@@ -65,27 +57,31 @@ const MyOrders = () => {
       calculateStats(orders);
 
       setLoading(false);
-
-    }
-    catch (error) {
-      console.error('Error fetching orders:', error);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
       setLoading(false);
     }
   };
 
-
   // Calculate statistics
   const calculateStats = (ordersData) => {
     const totalOrders = ordersData.length;
-    const pendingOrders = ordersData.filter(o => o.status === 'placed').length;
-    const completedOrders = ordersData.filter(o => o.status === 'completed').length;
-    const totalSpent = ordersData.reduce((sum, o) => sum + parseInt(o.payment_amount), 0);
+    const pendingOrders = ordersData.filter(
+      (o) => o.status === "placed"
+    ).length;
+    const completedOrders = ordersData.filter(
+      (o) => o.status === "completed"
+    ).length;
+    const totalSpent = ordersData.reduce(
+      (sum, o) => sum + parseInt(o.payment_amount),
+      0
+    );
 
     setStats({
       totalOrders,
       pendingOrders,
       completedOrders,
-      totalSpent
+      totalSpent,
     });
   };
 
@@ -93,16 +89,19 @@ const MyOrders = () => {
     let filtered = orders;
 
     // Apply status filter
-    if (currentFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === currentFilter);
+    if (currentFilter !== "all") {
+      filtered = filtered.filter((order) => order.status === currentFilter);
     }
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(order =>
-        order.order_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.original_file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.shop_name.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (order) =>
+          order.order_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.original_file_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          order.shop_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -111,25 +110,28 @@ const MyOrders = () => {
 
   const getStatusClass = (status) => {
     const classes = {
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      printing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      placed: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      printing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      placed:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     };
-    return classes[status] || '';
+    return classes[status] || "";
   };
 
   const getPaymentStatusClass = (status) => {
     const classes = {
-      pending: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      paid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      pending:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      paid: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     };
-    return classes[status] || '';
+    return classes[status] || "";
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
+    const options = { month: "short", day: "numeric", year: "numeric" };
+    return date.toLocaleDateString("en-US", options);
   };
 
   const showQRCode = (orderId) => {
@@ -175,7 +177,7 @@ const MyOrders = () => {
             Total Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.totalOrders}
+            {loading ? "..." : stats.totalOrders}
           </p>
         </div>
 
@@ -189,7 +191,7 @@ const MyOrders = () => {
             Pending Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.pendingOrders}
+            {loading ? "..." : stats.pendingOrders}
           </p>
         </div>
 
@@ -203,7 +205,7 @@ const MyOrders = () => {
             Completed Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : stats.completedOrders}
+            {loading ? "..." : stats.completedOrders}
           </p>
         </div>
 
@@ -217,7 +219,7 @@ const MyOrders = () => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? '...' : `₹${stats.totalSpent.toLocaleString()}`}
+            {loading ? "..." : `₹${stats.totalSpent.toLocaleString()}`}
           </p>
         </div>
       </div>
@@ -242,40 +244,52 @@ const MyOrders = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4 md:mb-6">
         <div className="flex flex-wrap gap-2">
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'all' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentFilter === "all"
+                ? "active"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            }`}
             onClick={() => {
-              setCurrentFilter('all');
+              setCurrentFilter("all");
               setDisplayedOrders(5);
             }}
           >
             All Orders
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'placed' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentFilter === "placed"
+                ? "active"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            }`}
             onClick={() => {
-              setCurrentFilter('placed');
+              setCurrentFilter("placed");
               setDisplayedOrders(5);
             }}
           >
             Placed
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'printing' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentFilter === "printing"
+                ? "active"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            }`}
             onClick={() => {
-              setCurrentFilter('printing');
+              setCurrentFilter("printing");
               setDisplayedOrders(5);
             }}
           >
             Printing
           </button>
           <button
-            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${currentFilter === 'completed' ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+            className={`filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentFilter === "completed"
+                ? "active"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            }`}
             onClick={() => {
-              setCurrentFilter('completed');
+              setCurrentFilter("completed");
               setDisplayedOrders(5);
             }}
           >
@@ -289,7 +303,9 @@ const MyOrders = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
           </div>
         ) : ordersToShow.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -334,12 +350,21 @@ const MyOrders = () => {
                       ₹{order.payment_amount}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`${getPaymentStatusClass(order.payment_status)} text-xs px-2.5 py-1 rounded-full font-medium`}>
-                        {order.payment_type} - {order.payment_status === 'pending' ? 'Unpaid' : 'Paid'}
+                      <span
+                        className={`${getPaymentStatusClass(
+                          order.payment_status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium`}
+                      >
+                        {order.payment_type} -{" "}
+                        {order.payment_status === "pending" ? "Unpaid" : "Paid"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                      <span
+                        className={`${getStatusClass(
+                          order.status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
                         {order.status}
                       </span>
                     </td>
@@ -367,7 +392,9 @@ const MyOrders = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
           </div>
         ) : ordersToShow.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -382,35 +409,66 @@ const MyOrders = () => {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">{order.order_code}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{order.original_file_name}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    {order.order_code}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {order.original_file_name}
+                  </p>
                 </div>
-                <span className={`${getStatusClass(order.status)} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}>
+                <span
+                  className={`${getStatusClass(
+                    order.status
+                  )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                >
                   {order.status}
                 </span>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Shop:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{order.shop_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Pages × Copies:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{order.pages} × {order.copies}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">₹{order.payment_amount}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Payment:</span>
-                  <span className={`${getPaymentStatusClass(order.payment_status)} text-xs px-2.5 py-1 rounded-full font-medium`}>
-                    {order.payment_type} - {order.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Shop:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {order.shop_name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Date:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatDate(order.created_at)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Pages × Copies:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {order.pages} × {order.copies}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Amount:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    ₹{order.payment_amount}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Payment:
+                  </span>
+                  <span
+                    className={`${getPaymentStatusClass(
+                      order.payment_status
+                    )} text-xs px-2.5 py-1 rounded-full font-medium`}
+                  >
+                    {order.payment_type} -{" "}
+                    {order.payment_status === "paid" ? "Paid" : "Unpaid"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Date:
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(order.created_at)}
+                  </span>
                 </div>
               </div>
               <button
@@ -447,7 +505,9 @@ const MyOrders = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Order QR Code</h3>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                Order QR Code
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -476,7 +536,7 @@ const MyOrders = () => {
       {/* Footer */}
       <footer className="mt-8 text-center pb-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          © 2025 PrintEase | Designed by{' '}
+          © 2025 PrintEase | Designed by{" "}
           <span className="font-semibold text-purple-600 dark:text-purple-400">
             Bhavneet Verma
           </span>
