@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { isLoggedIn } from "../../assets/auth";
 import { Navigate } from "react-router-dom";
 
+
 const ShopDashboard = () => {
   // useEffect(() => {
   //   const user_id= isLoggedIn("shopkeeper");
@@ -29,6 +30,8 @@ const ShopDashboard = () => {
   });
 
   const API = import.meta.env.VITE_API;
+  const [data, setdata] = useState()
+  const [filteredOrders, setfilteredOrders] = useState()
 
   // Fetch shop data from API
   useEffect(() => {
@@ -53,6 +56,9 @@ const ShopDashboard = () => {
       const data = await response.json();
 
       console.log("Shop Dashboard Data:", data);
+      setdata(data)
+      setfilteredOrders(data.
+recent_orders)
 
       // If API returns data, use it; otherwise use simulated data
       if (data.success) {
@@ -252,10 +258,10 @@ const ShopDashboard = () => {
     // Trigger print job
   };
 
-  const filteredOrders =
-    filterStatus === "all"
-      ? orders
-      : orders.filter((order) => order.status === filterStatus);
+  // const filteredOrders =
+  //   filterStatus === "all"
+  //     ? orders
+  //     : orders.filter((order) => order.status === filterStatus);
 
   const toggleShopStatus = () => {
     setShopInfo((prev) => ({
@@ -321,7 +327,8 @@ const ShopDashboard = () => {
             Total Orders
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.totalOrders}
+            {loading ? "..." : data.cards.total_orders
+}
           </p>
           <p className="text-xs mt-1 text-green-500">
             <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}%
@@ -339,7 +346,7 @@ const ShopDashboard = () => {
             Pending
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.pendingRequests}
+            {loading ? "..." : data.cards.pending_orders}
           </p>
           <p className="text-xs mt-1 text-yellow-600">Awaiting action</p>
         </div>
@@ -355,7 +362,7 @@ const ShopDashboard = () => {
             Printing
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.printingOrders}
+            {loading ? "..." : data.cards.printing_orders}
           </p>
           <p className="text-xs mt-1 text-blue-600">In progress</p>
         </div>
@@ -371,7 +378,7 @@ const ShopDashboard = () => {
             Completed
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.completedOrders}
+            {loading ? "..." : data.cards.completed_orders}
           </p>
           <p className="text-xs mt-1 text-green-600">Ready for pickup</p>
         </div>
@@ -387,7 +394,7 @@ const ShopDashboard = () => {
             Today
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.todayOrders}
+            {loading ? "..." : data.cards.today_orders}
           </p>
           <p className="text-xs mt-1 text-purple-600">Orders today</p>
         </div>
@@ -403,7 +410,7 @@ const ShopDashboard = () => {
             Earnings
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : `₹${stats.totalEarnings.toLocaleString()}`}
+            {loading ? "..." : `₹${data.cards.today_earnings.toLocaleString()}`}
           </p>
           <p className="text-xs mt-1 text-green-500">
             <i className="fas fa-arrow-up"></i> {stats.earningsGrowth}%
@@ -504,28 +511,28 @@ const ShopDashboard = () => {
                     className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <td className="px-4 md:px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {order.id}
+                      {order.order_id}
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 lg:hidden">
                         {order.time}
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden lg:table-cell text-gray-600 dark:text-gray-400">
-                      {order.customer}
+                      {order.customer_name}
                       <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {order.time}
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden sm:table-cell text-gray-600 dark:text-gray-400">
-                      {order.document}
+                      {order.original_file_name}
                     </td>
                     <td className="px-4 md:px-6 py-4 text-gray-600 dark:text-gray-400">
                       {order.pages}
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden md:table-cell text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-1">
-                        <span>{order.payment_method}</span>
+                        <span>{order.payment_type}</span>
                         <span className="text-gray-500">•</span>
-                        <span className="font-semibold">₹{order.amount}</span>
+                        <span className="font-semibold">₹{order.payment_amount}</span>
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden md:table-cell">
@@ -541,7 +548,7 @@ const ShopDashboard = () => {
                       <span
                         className={`${getStatusClass(
                           order.status
-                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                        )} text-xs px-2.5 py-1 rounded-full text-blue-500 font-medium capitalize`}
                       >
                         {order.status}
                       </span>

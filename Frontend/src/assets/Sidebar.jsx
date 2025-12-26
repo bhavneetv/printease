@@ -1,6 +1,7 @@
 // src/components/Sidebar.jsx
 import React from "react";
 import { logout } from "./logout";
+import { useState, useEffect } from "react";
 import {
   FaPrint,
   FaHome,
@@ -14,8 +15,19 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ collapsed, closeSidebar }) {
+
   const location = useLocation();
-  const user = sessionStorage.getItem("user") || null;
+  const [role, setrole] = useState()
+  const [user, setuser] = useState()
+
+  useEffect(() => {
+    const user = sessionStorage.getItem("user") || null;
+    setuser(user)
+    const decoded = atob(user)
+    const info = JSON.parse(decoded)
+    setrole(info.role)
+  }, [])
+
 
   return (
     <aside
@@ -42,66 +54,124 @@ export default function Sidebar({ collapsed, closeSidebar }) {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-2">
-          <NavItem
-            to="/"
-            icon={FaHome}
-            label="Dashboard"
-            isActive={location.pathname === "/"}
-            onClick={closeSidebar}
-          />
-          <NavItem
-            to="/FileUpload"
-            icon={FaUpload}
-            label="Upload File"
-            isActive={location.pathname === "/FileUpload"}
-            onClick={closeSidebar}
-          />
-          <NavItem
-            to="/Myorders"
-            icon={FaShoppingBag}
-            label="My Orders"
-            isActive={location.pathname === "/Myorders"}
-            onClick={closeSidebar}
-          />
-          <NavItem
-            to="/Payments"
-            icon={FaCreditCard}
-            label="Payments"
-            isActive={location.pathname === "/Payments"}
-            onClick={closeSidebar}
-          />
-          <NavItem
-            to="/Profile"
-            icon={FaUser}
-            label="Profile"
-            isActive={location.pathname === "/Profile"}
-            onClick={closeSidebar}
-          />
-          <NavItem
-            style={{ display: user ? "none" : "block" }}
-            to="/login"
-            icon={FaSignOutAlt}
-            label={user ? "Logout" : "Login"}
-            isActive={location.pathname === "/Login"}
-            onClick={closeSidebar}
-          />
+        {
+          role === "shopkeeper" ?
+            <nav className="space-y-2">
+              <NavItem
+                to="/ShopDashboard"
+                icon={FaHome}
+                label="ShopDashboard"
+                isActive={location.pathname === "/ShopDashboard"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/InventoryPage"
+                icon={FaHome}
+                label="InventoryPage"
+                isActive={location.pathname === "/InventoryPage"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/OrderDetailsPage"
+                icon={FaHome}
+                label="Order Details Page"
+                isActive={location.pathname === "/OrderDetailsPage"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/ShopOrders"
+                icon={FaHome}
+                label="Shop Orders"
+                isActive={location.pathname === "/ShopOrders"}
+                onClick={closeSidebar}
+              />
+                   <NavItem
+                to="/Profile"
+                icon={FaUser}
+                label="Profile"
+                isActive={location.pathname === "/Profile"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                style={{ display: user ? "none" : "block" }}
+                to="/login"
+                icon={FaSignOutAlt}
+                label={user ? "Logout" : "Login"}
+                isActive={location.pathname === "/Login"}
+                onClick={logout}
+              />
 
-          <NavItem
-            style={{ display: user ? "block" : "none" }}
-            icon={FaSignOutAlt}
-            label={"Logout"}
-            isActive={location.pathname === "/Logout"}
-            onClick={logout}
-          />
-          <NavItem
-            to="/ShopOrderPage"
-            icon={FaSignOutAlt}
-            label=" Shop Order Page"
-            isActive={location.pathname === "/ShopOrderPage"}
-            onClick={closeSidebar}
-          />
-        </nav>
+              {/* <NavItem
+                style={{ display: user ? "block" : "none" }}
+                icon={FaSignOutAlt}
+                label={"Logout"}
+                isActive={location.pathname === "/Logout"}
+                onClick={logout}
+              /> */}
+
+            </nav>
+            :
+            <nav className="space-y-2">
+              <NavItem
+                to="/"
+                icon={FaHome}
+                label="Dashboard"
+                isActive={location.pathname === "/"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/FileUpload"
+                icon={FaUpload}
+                label="Upload File"
+                isActive={location.pathname === "/FileUpload"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/Myorders"
+                icon={FaShoppingBag}
+                label="My Orders"
+                isActive={location.pathname === "/Myorders"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/Payments"
+                icon={FaCreditCard}
+                label="Payments"
+                isActive={location.pathname === "/Payments"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                to="/Profile"
+                icon={FaUser}
+                label="Profile"
+                isActive={location.pathname === "/Profile"}
+                onClick={closeSidebar}
+              />
+              <NavItem
+                style={{ display: user ? "none" : "block" }}
+                to="/login"
+                icon={FaSignOutAlt}
+                label={user ? "Logout" : "Login"}
+                isActive={location.pathname === "/Login"}
+                onClick={logout}
+              />
+
+              {/* <NavItem
+                style={{ display: user ? "block" : "none" }}
+                icon={FaSignOutAlt}
+                label={"Logout"}
+                isActive={location.pathname === "/Logout"}
+                onClick={logout}
+              /> */}
+              <NavItem
+                to="/ShopOrderPage"
+                icon={FaSignOutAlt}
+                label=" Shop Order Page"
+                isActive={location.pathname === "/ShopOrderPage"}
+                onClick={closeSidebar}
+              />
+            </nav>
+        }
       </div>
     </aside>
   );
@@ -113,11 +183,10 @@ function NavItem({ to, icon: Icon, label, isActive, onClick }) {
     <Link to={to}>
       <div
         onClick={onClick}
-        className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 group cursor-pointer ${
-          isActive
-            ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg"
-            : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
-        }`}
+        className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 group cursor-pointer ${isActive
+          ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg"
+          : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+          }`}
       >
         <Icon className="w-5 h-5" />
         <span className="ml-3 font-medium">{label}</span>
