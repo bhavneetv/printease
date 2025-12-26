@@ -39,7 +39,7 @@ $totalOrders = ($q1 && $row = $q1->fetch_assoc()) ? (int)$row['total'] : 0;
 $q2 = $conn->query("
     SELECT COUNT(*) AS pending 
     FROM orders 
-    WHERE created_by = $userId AND status = 'pending'
+    WHERE created_by = $userId AND status = 'placed'
 ");
 $pending = ($q2 && $row = $q2->fetch_assoc()) ? (int)$row['pending'] : 0;
 
@@ -50,6 +50,13 @@ $q3 = $conn->query("
     WHERE created_by = $userId AND payment_status = 'paid'
 ");
 $spent = ($q3 && $row = $q3->fetch_assoc()) ? (float)$row['spent'] : 0;
+
+$q33 = $conn->query("
+    SELECT IFNULL(SUM(pages),0) AS pages 
+    FROM orders 
+    WHERE created_by = $userId 
+");
+$pages = ($q33 && $row = $q33->fetch_assoc()) ? (float)$row['pages'] : 0;
 
 /* ================= RECENT ORDERS ================= */
 $recent = [];
@@ -71,6 +78,7 @@ if ($q4 && $q4->num_rows > 0) {
 echo json_encode([
     "status" => "success",
     "cards" => [
+        "pages" => $pages,
         "total_orders" => $totalOrders,
         "pending_orders" => $pending,
         "total_spent" => $spent
