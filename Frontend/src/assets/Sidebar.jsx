@@ -16,17 +16,35 @@ import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ collapsed, closeSidebar }) {
 
-  const location = useLocation();
-  const [role, setrole] = useState()
-  const [user, setuser] = useState()
+const location = useLocation();
+const [role, setRole] = useState(null);
+const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const user = sessionStorage.getItem("user") || null;
-    setuser(user)
-    const decoded = atob(user)
-    const info = JSON.parse(decoded)
-    setrole(info.role)
-  }, [])
+useEffect(() => {
+  const storedUser = sessionStorage.getItem("user");
+
+  // 🔴 LOGOUT CASE
+  if (!storedUser) {
+    setUser(null);
+    setRole(null);
+    return; 
+  }
+
+  try {
+    setUser(storedUser);
+
+    const decoded = atob(storedUser);  
+    const info = JSON.parse(decoded);   
+
+    setRole(info?.role);
+  } catch (err) {
+    console.error("Invalid user data", err);
+    sessionStorage.removeItem("user");
+    setUser(null);
+    setRole(null);
+  }
+}, []);
+
 
 
   return (
