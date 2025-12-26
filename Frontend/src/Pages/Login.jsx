@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { redirectLogin } from "../assets/redirectLogin";
 
 export default function Login() {
   const API = import.meta.env.VITE_API;
   const navigate = useNavigate();
 
+  // Google Sign In
   const handleCredentialResponse = async (response) => {
     const res = await fetch(`${API}backend/google-auth.php`, {
       method: "POST",
@@ -13,11 +15,10 @@ export default function Login() {
     });
 
     const data = await res.json();
-    console.log(data);
+    // console.log(data);
 
     if (data.status) {
-
-       const userSession = {
+      const userSession = {
         id: data.data.id,
         name: data.data.name,
         role: data.data.role,
@@ -25,14 +26,16 @@ export default function Login() {
 
       sessionStorage.setItem("user", btoa(JSON.stringify(userSession)));
       alert("Login successful!");
-      console.log("Logged in:", data.data);
-
-      // redirect
-      
+      // console.log("Logged in:", data.data);
+      window.location.reload(false);
     } else {
       alert(data.message);
     }
   };
+
+  useEffect(()=>{
+    redirectLogin();
+  },[])
 
   useEffect(() => {
     if (!window.google) {
@@ -51,10 +54,6 @@ export default function Login() {
       size: "large",
     });
   }, []);
-
-  if (sessionStorage.getItem("user")) {
-    navigate("/");
-  }
 
   // Form state
   const [isLogin, setIsLogin] = useState(true);
@@ -171,14 +170,7 @@ export default function Login() {
 
       sessionStorage.setItem("user", btoa(JSON.stringify(userSession)));
       alert("Login successful!");
-
-      if (data.user.role === "shop") {
-        navigate("/Shopdashboard");
-      } else if (data.user.role === "admin") {
-        navigate("/");
-      } else {
-        navigate("/");
-      }
+      window.location.reload(false);
     } catch (error) {
       console.error("Login error:", error);
       alert("Something went wrong. Please try again.");
@@ -208,7 +200,7 @@ export default function Login() {
       });
 
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
 
       if (!data.status) {
         alert(data.message);
@@ -274,10 +266,6 @@ export default function Login() {
     setConfirmPassword("");
     setFullName("");
   };
-
-  // THIS IS JUST A TEST FUNCTION TO BYPASS LOGIN FOR DEV PURPOSES
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
       {/* Background Pattern */}

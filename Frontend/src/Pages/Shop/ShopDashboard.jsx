@@ -1,143 +1,586 @@
-import React from 'react';
-import { LayoutDashboard, ShoppingCart, Package, Users, BarChart3, Search, Bell } from 'lucide-react';
-import { useEffect , useState } from 'react';
-import axios from "axios"
-import { useNavigate } from 'react-router-dom';
-
-const StatCard = ({ title, value, change, isPositive }) => (
-  <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-    <p className="text-sm font-medium text-slate-500">{title}</p>
-    <div className="flex items-baseline gap-2 mt-2">
-      <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
-      <span className={`text-xs font-medium ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-        {isPositive ? '↑' : '↓'} {change}
-      </span>
-    </div>
-  </div>
-);
+import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
+import { Navigate } from "react-router-dom";
 
 const ShopDashboard = () => {
+  // useEffect(() => {
+  //   const user_id= isLoggedIn("shopkeeper");
+  
+  // }, []);
 
-    const navigate = useNavigate()
+  const user_id = isLoggedIn("shopkeeper");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [shopInfo, setShopInfo] = useState({
+    name: "PrintEase Shop",
+    status: "open",
+    queueSize: 0,
+  });
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingRequests: 0,
+    printingOrders: 0,
+    completedOrders: 0,
+    todayOrders: 0,
+    totalEarnings: 0,
+    earningsGrowth: 0,
+    ordersGrowth: 0,
+  });
 
-useEffect(() => {
+  const API = import.meta.env.VITE_API;
 
-// yaha pa role ma sessionStorage ma te role likh diye 
+  // Fetch shop data from API
+  useEffect(() => {
+    fetchShopData();
+  }, []);
 
-// ar terminal ma npm i axios run krdie 
+  const fetchShopData = async () => {
+    try {
+      setLoading(true);
 
-// chl yo to ma krdunnga to response leka ajiye bs bavkend ma te 
+      // Replace with your actual API endpoint
+      const response = await fetch(API + "api/shop/dashboard.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user_id,
+        }),
+      });
 
-    const role = sessionStorage.getItem("")
-    const doublechecking = async ()=>{
-        await axios.post("" , role).then((res)=>{
-            if (!res.data){
-                console.log("no data came")
-            }
-            else{
-                if (res.data.role !== "shop"){
-                    navigate("/Dashboard")
-                }
-                else{
-                    console.log("Uer verified")
-                }
-            }
-        })
-    .catch((err)=>{
-        console.log(err)
+      const data = await response.json();
 
-    })
+      console.log("Shop Dashboard Data:", data);
+
+      // If API returns data, use it; otherwise use simulated data
+      if (data.success) {
+        setShopInfo(data.shop_info);
+        setOrders(data.recent_orders);
+        setStats(data.stats);
+      } else {
+        // Simulated data for demonstration
+        const simulatedOrders = [
+          {
+            id: "#ORD-2850",
+            document: "Assignment.pdf",
+            pages: 24,
+            amount: 96,
+            payment_method: "UPI",
+            payment_status: "paid",
+            status: "printing",
+            customer: "Rahul Sharma",
+            time: "10 mins ago",
+          },
+          {
+            id: "#ORD-2849",
+            document: "Project Report.docx",
+            pages: 45,
+            amount: 180,
+            payment_method: "Cash",
+            payment_status: "pending",
+            status: "pending",
+            customer: "Priya Singh",
+            time: "25 mins ago",
+          },
+          {
+            id: "#ORD-2848",
+            document: "Presentation.pptx",
+            pages: 15,
+            amount: 60,
+            payment_method: "Card",
+            payment_status: "paid",
+            status: "completed",
+            customer: "Amit Kumar",
+            time: "1 hour ago",
+          },
+          {
+            id: "#ORD-2847",
+            document: "Notes.pdf",
+            pages: 32,
+            amount: 128,
+            payment_method: "UPI",
+            payment_status: "paid",
+            status: "printing",
+            customer: "Sneha Patel",
+            time: "2 hours ago",
+          },
+          {
+            id: "#ORD-2846",
+            document: "Resume.pdf",
+            pages: 8,
+            amount: 32,
+            payment_method: "Cash",
+            payment_status: "paid",
+            status: "completed",
+            customer: "Vikram Mehta",
+            time: "3 hours ago",
+          },
+          {
+            id: "#ORD-2845",
+            document: "Thesis.pdf",
+            pages: 68,
+            amount: 272,
+            payment_method: "UPI",
+            payment_status: "paid",
+            status: "completed",
+            customer: "Anjali Reddy",
+            time: "4 hours ago",
+          },
+        ];
+
+        setOrders(simulatedOrders);
+        calculateStats(simulatedOrders);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching shop data:", error);
+
+      // Fallback to simulated data on error
+      const simulatedOrders = [
+        {
+          id: "#ORD-2850",
+          document: "Assignment.pdf",
+          pages: 24,
+          amount: 96,
+          payment_method: "UPI",
+          payment_status: "paid",
+          status: "printing",
+          customer: "Rahul Sharma",
+          time: "10 mins ago",
+        },
+        {
+          id: "#ORD-2849",
+          document: "Project Report.docx",
+          pages: 45,
+          amount: 180,
+          payment_method: "Cash",
+          payment_status: "pending",
+          status: "pending",
+          customer: "Priya Singh",
+          time: "25 mins ago",
+        },
+        {
+          id: "#ORD-2848",
+          document: "Presentation.pptx",
+          pages: 15,
+          amount: 60,
+          payment_method: "Card",
+          payment_status: "paid",
+          status: "completed",
+          customer: "Amit Kumar",
+          time: "1 hour ago",
+        },
+      ];
+
+      setOrders(simulatedOrders);
+      calculateStats(simulatedOrders);
+      setLoading(false);
     }
-    // doublechecking()
-}, [])
+  };
 
+  const calculateStats = (ordersData) => {
+    const totalOrders = ordersData.length;
+    const pendingRequests = ordersData.filter(
+      (o) => o.status === "pending"
+    ).length;
+    const printingOrders = ordersData.filter(
+      (o) => o.status === "printing"
+    ).length;
+    const completedOrders = ordersData.filter(
+      (o) => o.status === "completed"
+    ).length;
+
+    // Calculate today's orders (simulated - in real app, check date)
+    const todayOrders = Math.floor(totalOrders * 0.4);
+
+    const totalEarnings = ordersData.reduce(
+      (sum, order) => sum + order.amount,
+      0
+    );
+
+    const earningsGrowth = 15;
+    const ordersGrowth = 12;
+
+    const queueSize = pendingRequests + printingOrders;
+
+    setStats({
+      totalOrders,
+      pendingRequests,
+      printingOrders,
+      completedOrders,
+      todayOrders,
+      totalEarnings,
+      earningsGrowth,
+      ordersGrowth,
+    });
+
+    setShopInfo((prev) => ({
+      ...prev,
+      queueSize,
+    }));
+  };
+
+  const getStatusClass = (status) => {
+    const classes = {
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      printing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    };
+    return classes[status] || "";
+  };
+
+  const getPaymentStatusClass = (status) => {
+    const classes = {
+      paid: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      pending: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    };
+    return classes[status] || "";
+  };
+
+  const handleViewOrder = (orderId) => {
+    alert(`Viewing order ${orderId}`);
+    // Navigate to order details or open modal
+  };
+
+  const handlePrintOrder = (orderId) => {
+    alert(`Starting print for order ${orderId}`);
+    // Trigger print job
+  };
+
+  const filteredOrders =
+    filterStatus === "all"
+      ? orders
+      : orders.filter((order) => order.status === filterStatus);
+
+  const toggleShopStatus = () => {
+    setShopInfo((prev) => ({
+      ...prev,
+      status: prev.status === "open" ? "closed" : "open",
+    }));
+  };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
-        <div className="p-6 font-bold text-xl text-indigo-600">ShopFlow</div>
-        <nav className="flex-1 px-4 space-y-1">
-          {[
-            { name: 'Dashboard', icon: LayoutDashboard, active: true },
-            { name: 'Orders', icon: ShoppingCart },
-            { name: 'Products', icon: Package },
-            { name: 'Customers', icon: Users },
-            { name: 'Analytics', icon: BarChart3 },
-          ].map((item) => (
-            <a key={item.name} href="#" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${item.active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-              <item.icon size={18} /> {item.name}
-            </a>
-          ))}
-        </nav>
-      </aside>
+    <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+      <style>{`
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+      `}</style>
 
-      {/* Main Content */}
-      <main className="flex-1">
-        {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
-          <div className="relative w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input type="text" placeholder="Search orders, products..." className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+      {/* Shop Header */}
+      <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
+            {shopInfo.name} 🏪
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+            Shop management and order overview
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Status:
+            </span>
+            <button
+              onClick={toggleShopStatus}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                shopInfo.status === "open"
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-red-500 text-white hover:bg-red-600"
+              }`}
+            >
+              {shopInfo.status === "open" ? "🟢 Open" : "🔴 Closed"}
+            </button>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-slate-600"><Bell size={20} /></button>
-            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">JD</div>
-          </div>
-        </header>
-
-        <div className="p-8 max-w-7xl mx-auto">
-          <header className="mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">Store Overview</h1>
-            <p className="text-slate-500">Welcome back, here is what's happening today.</p>
-          </header>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard title="Total Revenue" value="$42,390.00" change="12.5%" isPositive={true} />
-            <StatCard title="Active Orders" value="156" change="3.1%" isPositive={true} />
-            <StatCard title="Total Customers" value="2,420" change="0.4%" isPositive={false} />
-            <StatCard title="Conversion Rate" value="3.24%" change="2.1%" isPositive={true} />
-          </div>
-
-          {/* Recent Orders Table */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h2 className="font-bold text-slate-900">Recent Orders</h2>
-              <button className="text-sm text-indigo-600 font-semibold hover:text-indigo-700">View all</button>
+          {shopInfo.queueSize > 0 && (
+            <div className="bg-purple-100 dark:bg-purple-900 px-3 py-2 rounded-lg">
+              <span className="text-sm font-semibold text-purple-800 dark:text-purple-200">
+                Queue: {shopInfo.queueSize}
+              </span>
             </div>
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+          )}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-8">
+        {/* Total Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+              <i className="fas fa-shopping-cart text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Total Orders
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : stats.totalOrders}
+          </p>
+          <p className="text-xs mt-1 text-green-500">
+            <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}%
+          </p>
+        </div>
+
+        {/* Pending Requests */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-clock text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Pending
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : stats.pendingRequests}
+          </p>
+          <p className="text-xs mt-1 text-yellow-600">Awaiting action</p>
+        </div>
+
+        {/* Printing Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-print text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Printing
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : stats.printingOrders}
+          </p>
+          <p className="text-xs mt-1 text-blue-600">In progress</p>
+        </div>
+
+        {/* Completed Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-check-circle text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Completed
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : stats.completedOrders}
+          </p>
+          <p className="text-xs mt-1 text-green-600">Ready for pickup</p>
+        </div>
+
+        {/* Today's Orders */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-calendar-day text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Today
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : stats.todayOrders}
+          </p>
+          <p className="text-xs mt-1 text-purple-600">Orders today</p>
+        </div>
+
+        {/* Total Earnings */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+              <i className="fas fa-rupee-sign text-white text-sm"></i>
+            </div>
+          </div>
+          <h3 className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Earnings
+          </h3>
+          <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            {loading ? "..." : `₹${stats.totalEarnings.toLocaleString()}`}
+          </p>
+          <p className="text-xs mt-1 text-green-500">
+            <i className="fas fa-arrow-up"></i> {stats.earningsGrowth}%
+          </p>
+        </div>
+      </div>
+
+      {/* Recent Orders Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h2 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
+            Recent Orders
+          </h2>
+
+          {/* Filter Buttons */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setFilterStatus("all")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                filterStatus === "all"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilterStatus("pending")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                filterStatus === "pending"
+                  ? "bg-yellow-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setFilterStatus("printing")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                filterStatus === "printing"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Printing
+            </button>
+            <button
+              onClick={() => setFilterStatus("completed")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                filterStatus === "completed"
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+            No {filterStatus !== "all" ? filterStatus : ""} orders found
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                  <th className="px-6 py-4">Order ID</th>
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Total</th>
+                  <th className="px-4 md:px-6 py-3">Order ID</th>
+                  <th className="px-4 md:px-6 py-3 hidden lg:table-cell">
+                    Customer
+                  </th>
+                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">
+                    Document
+                  </th>
+                  <th className="px-4 md:px-6 py-3">Pages</th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Payment
+                  </th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Pay Status
+                  </th>
+                  <th className="px-4 md:px-6 py-3">Status</th>
+                  <th className="px-4 md:px-6 py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                {[
-                  { id: '#ORD-7421', user: 'Alex Rivera', status: 'Shipped', total: '$124.00' },
-                  { id: '#ORD-7422', user: 'Sarah Chen', status: 'Processing', total: '$89.50' },
-                  { id: '#ORD-7423', user: 'Mike Ross', status: 'Delivered', total: '$210.00' },
-                ].map((order) => (
-                  <tr key={order.id} className="text-sm hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{order.id}</td>
-                    <td className="px-6 py-4 text-slate-600">{order.user}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-100">
+              <tbody>
+                {filteredOrders.map((order, index) => (
+                  <tr
+                    key={index}
+                    className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <td className="px-4 md:px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {order.id}
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 lg:hidden">
+                        {order.time}
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden lg:table-cell text-gray-600 dark:text-gray-400">
+                      {order.customer}
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        {order.time}
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden sm:table-cell text-gray-600 dark:text-gray-400">
+                      {order.document}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 text-gray-600 dark:text-gray-400">
+                      {order.pages}
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden md:table-cell text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <span>{order.payment_method}</span>
+                        <span className="text-gray-500">•</span>
+                        <span className="font-semibold">₹{order.amount}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 md:px-6 py-4 hidden md:table-cell">
+                      <span
+                        className={`${getPaymentStatusClass(
+                          order.payment_status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
+                        {order.payment_status}
+                      </span>
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      <span
+                        className={`${getStatusClass(
+                          order.status
+                        )} text-xs px-2.5 py-1 rounded-full font-medium capitalize`}
+                      >
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-900 font-medium">{order.total}</td>
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewOrder(order.id)}
+                          className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+                          title="View Details"
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                        {order.status === "pending" && (
+                          <button
+                            onClick={() => handlePrintOrder(order.id)}
+                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                            title="Start Printing"
+                          >
+                            <i className="fas fa-play"></i>
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </main>
-    </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-8 text-center pb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          © 2025 PrintEase | Shop Owner Dashboard
+        </p>
+      </footer>
+    </main>
   );
 };
 
