@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const Dashboard = () => {
+const Dashboard = ({}) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -14,6 +14,9 @@ const Dashboard = () => {
   });
 
   const API = import.meta.env.VITE_API;
+
+const username = sessionStorage.getItem("user")
+const name = JSON.parse(atob(username)).name
 
   let user_id = sessionStorage.getItem("user") || 0;
 
@@ -58,45 +61,7 @@ const [lenght, setlenght] = useState()
       const data = await response.json(); // use json, not text
       console.log(data);
 
-      // Simulated data for demonstration
-      const simulatedData = [
-        {
-          id: "#ORD-2847",
-          document: "Assignment.pdf",
-          pages: 24,
-          amount: 96,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2846",
-          document: "Notes.pdf",
-          pages: 15,
-          amount: 60,
-          status: "processing",
-        },
-        {
-          id: "#ORD-2845",
-          document: "Report.docx",
-          pages: 42,
-          amount: 168,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2844",
-          document: "Presentation.pptx",
-          pages: 8,
-          amount: 32,
-          status: "pending",
-        },
-        {
-          id: "#ORD-2843",
-          document: "Syllabus.pdf",
-          pages: 6,
-          amount: 24,
-          status: "completed",
-        },
-      ];
-
+  
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -168,7 +133,7 @@ const [lenght, setlenght] = useState()
       {/* Welcome Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
-          Welcome, Bhavneet 👋
+          Welcome, {name} 👋
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
           Here's what's happening with your print orders today

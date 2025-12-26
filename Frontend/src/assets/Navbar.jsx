@@ -299,7 +299,7 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                     alt={userName}
                     className="w-9 h-9 rounded-full"
                   />
-                  <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="hidden md:block text-sm font-medium text-red-700 dark:text-gray-300">
                     {userName}
                   </span>
                   <FaChevronDown className={`text-xs text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />

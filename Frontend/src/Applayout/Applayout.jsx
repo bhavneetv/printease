@@ -6,6 +6,9 @@ import Navbar from '../assets/Navbar.jsx';
 
 function Applayout() {
   const [isDark, setIsDark] = useState(false);
+  const user = sessionStorage.getItem("user")
+  const userData = JSON.parse(atob(user));
+  console.log(userData.name)
 
   return (
     <div className={isDark ? "dark" : ""}>
@@ -14,7 +17,7 @@ function Applayout() {
         <Navbar 
           onToggleTheme={() => setIsDark(!isDark)} 
           isDark={isDark}
-          userName="Bhavneet"
+          userName={userData.name}
         />
         
         {/* Main Content */}
