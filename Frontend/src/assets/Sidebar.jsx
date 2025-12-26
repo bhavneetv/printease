@@ -23,7 +23,7 @@ const [user, setUser] = useState(null);
 useEffect(() => {
   const storedUser = sessionStorage.getItem("user");
 
-  // 🔴 LOGOUT CASE
+
   if (!storedUser) {
     setUser(null);
     setRole(null);
