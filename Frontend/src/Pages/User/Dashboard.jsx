@@ -15,16 +15,16 @@ const Dashboard = ({}) => {
   });
 
   const API = import.meta.env.VITE_API;
-
-const username = sessionStorage.getItem("user")
-const name = JSON.parse(atob(username)).name
-
+  
   if (!isLoggedIn("user")) {
     window.location.href = "/login";
     // console.log("f")
   }
   const user_idt = isLoggedIn("user");
   
+    const username = sessionStorage.getItem("user");
+    const name = JSON.parse(atob(username)).name;
+
   // Fetch orders from API
   useEffect(() => {
     fetchOrders();
@@ -46,47 +46,7 @@ const name = JSON.parse(atob(username)).name
       });
 
       const data = await response.json(); // use json, not text
-      console.log(data);
-
-      // Simulated data for demonstration
-      const simulatedData = [
-        {
-          id: "#ORD-2847",
-          document: "Assignment.pdf",
-          pages: 24,
-          amount: 96,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2846",
-          document: "Notes.pdf",
-          pages: 15,
-          amount: 60,
-          status: "processing",
-        },
-        {
-          id: "#ORD-2845",
-          document: "Report.docx",
-          pages: 42,
-          amount: 168,
-          status: "completed",
-        },
-        {
-          id: "#ORD-2844",
-          document: "Presentation.pptx",
-          pages: 8,
-          amount: 32,
-          status: "pending",
-        },
-        {
-          id: "#ORD-2843",
-          document: "Syllabus.pdf",
-          pages: 6,
-          amount: 24,
-          status: "completed",
-        },
-      ];
-
+      // console.log(data);
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -180,10 +140,7 @@ const name = JSON.parse(atob(username)).name
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : lenght.total_orders}
           </p>
-          <p className="text-xs mt-1 md:mt-2 text-green-500">
-            <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}% from last
-            month
-          </p>
+         
         </div>
 
         {/* Pages Printed */}
@@ -199,10 +156,7 @@ const name = JSON.parse(atob(username)).name
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : stats.pagesPrinted.toLocaleString()}
           </p>
-          <p className="text-xs mt-1 md:mt-2 text-green-500">
-            <i className="fas fa-arrow-up"></i> {stats.pagesGrowth}% from last
-            month
-          </p>
+         
         </div>
 
         {/* Total Spent */}
@@ -218,9 +172,7 @@ const name = JSON.parse(atob(username)).name
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : `₹${lenght.total_spent.toLocaleString()}`}
           </p>
-          <p className="text-xs mt-1 md:mt-2 text-gray-500 dark:text-gray-400">
-            Average ₹{averagePerOrder}/order
-          </p>
+         
         </div>
 
         {/* Pending Orders */}
@@ -236,9 +188,7 @@ const name = JSON.parse(atob(username)).name
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
             {loading ? "..." : lenght.pending_orders}
           </p>
-          <p className="text-xs mt-1 md:mt-2 text-yellow-600 dark:text-yellow-400">
-            {stats.readyForPickup} ready for pickup
-          </p>
+          
         </div>
       </div>
 
