@@ -52,7 +52,7 @@ const Dashboard = ({}) => {
 
       setlenght(data.cards);
       setOrders(data.recent_activity);
-      calculateStats(data.recent_activity);
+      calculateStats(data.cards);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -62,19 +62,12 @@ const Dashboard = ({}) => {
 
   // Calculate statistics from orders
   const calculateStats = (ordersData) => {
-    const totalOrders = ordersData.length || 0;
-    const pagesPrinted = ordersData.reduce(
-      (sum, order) => sum + order.pages,
-      0
-    );
-    const totalSpent = ordersData.reduce((sum, order) => sum + order.amount, 0);
-    const pendingOrders = ordersData.filter(
-      (order) => order.status === "pending"
-    ).length;
-    const readyForPickup = ordersData.filter(
-      (order) => order.status === "completed" || order.status === "processing"
-    ).length;
-
+    const totalOrders = ordersData.total_Orders|| 0;
+    const pagesPrinted = ordersData.pages || 0 
+  
+    const totalSpent = ordersData.total_spent || 0
+    const pendingOrders = ordersData.pending_orders || 0
+    
     // Simulated growth percentages (replace with actual calculation from database)
     const ordersGrowth = 12;
     const pagesGrowth = 8;
@@ -84,7 +77,7 @@ const Dashboard = ({}) => {
       pagesPrinted,
       totalSpent,
       pendingOrders,
-      readyForPickup,
+      
       ordersGrowth,
       pagesGrowth,
     });
@@ -154,7 +147,7 @@ const Dashboard = ({}) => {
             Pages Printed
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.pagesPrinted.toLocaleString()}
+            {loading ? "..." : stats.pagesPrinted}
           </p>
          
         </div>
