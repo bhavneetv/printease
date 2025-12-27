@@ -131,7 +131,7 @@ const Dashboard = ({}) => {
             Total Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : lenght.total_orders}
+            {loading ? "..." : lenght?.total_orders}
           </p>
          
         </div>
@@ -147,7 +147,7 @@ const Dashboard = ({}) => {
             Pages Printed
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : stats.pagesPrinted}
+            {loading ? "..." : stats?.pagesPrinted}
           </p>
          
         </div>
@@ -163,7 +163,7 @@ const Dashboard = ({}) => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : `₹${lenght.total_spent.toLocaleString()}`}
+            {loading ? "..." : `₹${lenght?.total_spent.toLocaleString()}`}
           </p>
          
         </div>
@@ -179,7 +179,7 @@ const Dashboard = ({}) => {
             Pending Orders
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : lenght.pending_orders}
+            {loading ? "..." : lenght?.pending_orders}
           </p>
           
         </div>

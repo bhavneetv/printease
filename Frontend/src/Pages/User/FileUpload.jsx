@@ -54,7 +54,7 @@ export default function PrintUpload() {
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        // console.log("User location:", lat, lng);
+        console.log("User location:", lat, lng);
         fetchNearbyShops(lat, lng);
       },
       (error) => {
@@ -144,7 +144,7 @@ export default function PrintUpload() {
       });
 
       const data = await res.json();
-      // console.log("Nearby shops response:", data);
+      console.log("Nearby shops response:", data);
 
       if (data.success && data.shops && data.shops.length > 0) {
         setNearbyShops(data.shops);
@@ -196,9 +196,8 @@ export default function PrintUpload() {
       submitOrderToServer();
     } else {
       // console.log("Order is UPI")
-      window.location.href = `upi://pay?pa=${getSelectedShopData().upi_id}&pn=${
-        getSelectedShopData().shop_name
-      }&am=${calculatePrice()}&tn=Order-Id%20${settings.orderID}&cu=INR`;
+      window.location.href = `upi://pay?pa=${getSelectedShopData().upi_id}&pn=${getSelectedShopData().shop_name
+        }&am=${calculatePrice()}&tn=Order-Id%20${settings.orderID}&cu=INR`;
       setTimeout(() => submitOrderToServer(), 1000);
     }
   };
@@ -233,6 +232,8 @@ export default function PrintUpload() {
     // codisAla();
   };
 
+  const [cod, setcod] = useState()
+
   const getSelectedShopData = () => {
     if (!settings.selectedShop) return null;
     return nearbyShops.find((shop) => shop.shop_id === settings.selectedShop);
@@ -261,6 +262,8 @@ export default function PrintUpload() {
     // Convert "0" or "1" strings into numbers if required
     code = Number(code);
     settings.cod = code;
+    setcod(code)
+    console.log(code)
 
     // console.log("COD value from shopData:", code);
   };
@@ -323,11 +326,10 @@ export default function PrintUpload() {
             </div>
 
             <div
-              className={`border-2 ${
-                isDragOver
+              className={`border-2 ${isDragOver
                   ? "border-purple-600 bg-purple-900/20"
                   : "border-dashed border-gray-600"
-              } rounded-lg p-8 text-center cursor-pointer transition-all`}
+                } rounded-lg p-8 text-center cursor-pointer transition-all`}
               onClick={() =>
                 !uploadedFile && document.getElementById("fileInput").click()
               }
@@ -434,11 +436,10 @@ export default function PrintUpload() {
                       onClick={() =>
                         setShop("selectedShop", shop.shop_id, shop.cod)
                       }
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        settings.selectedShop === shop.shop_id
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.selectedShop === shop.shop_id
                           ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                           : "border-gray-700 hover:border-gray-600"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -506,11 +507,10 @@ export default function PrintUpload() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        settings.color === "bw"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.color === "bw"
                           ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                           : "border-gray-700"
-                      }`}
+                        }`}
                       onClick={() => updateSetting("color", "bw")}
                     >
                       <div className="text-center">
@@ -522,11 +522,10 @@ export default function PrintUpload() {
                       </div>
                     </div>
                     <div
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        settings.color === "color"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.color === "color"
                           ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                           : "border-gray-700"
-                      }`}
+                        }`}
                       onClick={() => updateSetting("color", "color")}
                     >
                       <div className="text-center">
@@ -547,11 +546,10 @@ export default function PrintUpload() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        settings.sides === "single"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.sides === "single"
                           ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                           : "border-gray-700"
-                      }`}
+                        }`}
                       onClick={() => updateSetting("sides", "single")}
                     >
                       <div className="text-center">
@@ -560,11 +558,10 @@ export default function PrintUpload() {
                       </div>
                     </div>
                     <div
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        settings.sides === "double"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${settings.sides === "double"
                           ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                           : "border-gray-700"
-                      }`}
+                        }`}
                       onClick={() => updateSetting("sides", "double")}
                     >
                       <div className="text-center">
@@ -607,11 +604,10 @@ export default function PrintUpload() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div
-                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                    settings.payment === "upi"
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${settings.payment === "upi"
                       ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                       : "border-gray-700"
-                  }`}
+                    }`}
                   onClick={() => updateSetting("payment", "upi")}
                 >
                   <div className="text-center">
@@ -622,13 +618,13 @@ export default function PrintUpload() {
                     </p>
                   </div>
                 </div>
-                <div
+                <button
+                disabled={!cod}
                   id="codoption"
-                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                    settings.payment === "cash"
+                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${!cod ? "hover:cursor-not-allowed opacity-65" :""} ${settings.payment === "cash"
                       ? "border-purple-600 bg-gradient-to-br from-purple-900/20 to-purple-800/20"
                       : "border-gray-700"
-                  }`}
+                    }`}
                   onClick={() => updateSetting("payment", "cash")}
                 >
                   <div className="text-center">
@@ -636,7 +632,7 @@ export default function PrintUpload() {
                     <p className="font-medium text-white">Cash on Pickup</p>
                     <p className="text-xs text-gray-500 mt-1">Pay at shop</p>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           )}
