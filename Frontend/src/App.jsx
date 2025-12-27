@@ -5,11 +5,9 @@ import FileUpload from "./Pages/User/FileUpload.jsx";
 import Dashboard from "./Pages/User/Dashboard.jsx";
 import Myorders from "./Pages/User/Myorders.jsx";
 import Profile from "./Pages/User/Profile.jsx";
-import ShopOrders from "./Pages/Shop/ShopOrders.jsx";
 import Login from "./Pages/Login.jsx";
 import ShopOrderPage from "./Pages/User/ShopOrderPage.jsx"
 import ShopDashboard from "./Pages/Shop/ShopDashboard.jsx";
-import { InventoryPage } from "./Pages/Shop/InventoryPage.jsx";
 import { OrderDetailsPage } from "./Pages/Shop/OrderDetailsPage.jsx";
 
 function App() {
@@ -39,10 +37,7 @@ function App() {
           path: "/Profile",
           element: <Profile />,
         },
-        {
-          path: "/ShopOrders",
-          element: <ShopOrders />,
-        },
+     
         {
           path: "/Login",
           element: <Login />,
@@ -55,10 +50,7 @@ function App() {
           path: "/ShopDashboard",
           element: <ShopDashboard />,
         },
-        {
-          path: "/InventoryPage",
-          element: <InventoryPage />,
-        },
+     
         {
           path: "/OrderDetailsPage",
           element: <OrderDetailsPage />,
