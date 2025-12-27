@@ -78,14 +78,14 @@ useEffect(() => {
               <NavItem
                 to="/ShopDashboard"
                 icon={FaHome}
-                label="ShopDashboard"
+                label="Shop Dashboard"
                 isActive={location.pathname === "/ShopDashboard"}
                 onClick={closeSidebar}
               />
               <NavItem
                 to="/InventoryPage"
                 icon={FaHome}
-                label="InventoryPage"
+                label="Inventory Page"
                 isActive={location.pathname === "/InventoryPage"}
                 onClick={closeSidebar}
               />
