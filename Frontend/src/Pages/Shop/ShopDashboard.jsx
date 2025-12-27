@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { isLoggedIn } from "../../assets/auth";
 import { Navigate } from "react-router-dom";
 
-
 const ShopDashboard = () => {
   // useEffect(() => {
   //   const user_id= isLoggedIn("shopkeeper");
-  
+
   // }, []);
 
   const user_id = isLoggedIn("shopkeeper");
@@ -30,19 +29,38 @@ const ShopDashboard = () => {
   });
 
   const API = import.meta.env.VITE_API;
-  const [data, setdata] = useState()
-  const [filteredOrders, setfilteredOrders] = useState()
+  const [data, setdata] = useState();
+  const [filteredOrders, setfilteredOrders] = useState();
 
   // Fetch shop data from API
   useEffect(() => {
     fetchShopData();
+    toGetname();
   }, []);
 
+  const toGetname = () => {
+    fetch(API + "/api/shop/shopname.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user_id,
+        action: "get",
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setShopInfo((prev) => ({
+          ...prev,
+          name: data.shop_name,
+          status: data.is_open ? "open" : "closed",
+          queueSize: data.queue ?? 0,
+        }));
+      });
+  };
   const fetchShopData = async () => {
     try {
       setLoading(true);
 
-      // Replace with your actual API endpoint
       const response = await fetch(API + "api/shop/dashboard.php", {
         method: "POST",
         headers: {
@@ -56,134 +74,19 @@ const ShopDashboard = () => {
       const data = await response.json();
 
       console.log("Shop Dashboard Data:", data);
-      setdata(data)
-      setfilteredOrders(data.
-recent_orders)
+      setdata(data);
+      setfilteredOrders(data.recent_orders);
 
-      // If API returns data, use it; otherwise use simulated data
       if (data.success) {
         setShopInfo(data.shop_info);
         setOrders(data.recent_orders);
         setStats(data.stats);
       } else {
-        // Simulated data for demonstration
-        const simulatedOrders = [
-          {
-            id: "#ORD-2850",
-            document: "Assignment.pdf",
-            pages: 24,
-            amount: 96,
-            payment_method: "UPI",
-            payment_status: "paid",
-            status: "printing",
-            customer: "Rahul Sharma",
-            time: "10 mins ago",
-          },
-          {
-            id: "#ORD-2849",
-            document: "Project Report.docx",
-            pages: 45,
-            amount: 180,
-            payment_method: "Cash",
-            payment_status: "pending",
-            status: "pending",
-            customer: "Priya Singh",
-            time: "25 mins ago",
-          },
-          {
-            id: "#ORD-2848",
-            document: "Presentation.pptx",
-            pages: 15,
-            amount: 60,
-            payment_method: "Card",
-            payment_status: "paid",
-            status: "completed",
-            customer: "Amit Kumar",
-            time: "1 hour ago",
-          },
-          {
-            id: "#ORD-2847",
-            document: "Notes.pdf",
-            pages: 32,
-            amount: 128,
-            payment_method: "UPI",
-            payment_status: "paid",
-            status: "printing",
-            customer: "Sneha Patel",
-            time: "2 hours ago",
-          },
-          {
-            id: "#ORD-2846",
-            document: "Resume.pdf",
-            pages: 8,
-            amount: 32,
-            payment_method: "Cash",
-            payment_status: "paid",
-            status: "completed",
-            customer: "Vikram Mehta",
-            time: "3 hours ago",
-          },
-          {
-            id: "#ORD-2845",
-            document: "Thesis.pdf",
-            pages: 68,
-            amount: 272,
-            payment_method: "UPI",
-            payment_status: "paid",
-            status: "completed",
-            customer: "Anjali Reddy",
-            time: "4 hours ago",
-          },
-        ];
-
-        setOrders(simulatedOrders);
-        calculateStats(simulatedOrders);
       }
 
       setLoading(false);
     } catch (error) {
       console.error("Error fetching shop data:", error);
-
-      // Fallback to simulated data on error
-      const simulatedOrders = [
-        {
-          id: "#ORD-2850",
-          document: "Assignment.pdf",
-          pages: 24,
-          amount: 96,
-          payment_method: "UPI",
-          payment_status: "paid",
-          status: "printing",
-          customer: "Rahul Sharma",
-          time: "10 mins ago",
-        },
-        {
-          id: "#ORD-2849",
-          document: "Project Report.docx",
-          pages: 45,
-          amount: 180,
-          payment_method: "Cash",
-          payment_status: "pending",
-          status: "pending",
-          customer: "Priya Singh",
-          time: "25 mins ago",
-        },
-        {
-          id: "#ORD-2848",
-          document: "Presentation.pptx",
-          pages: 15,
-          amount: 60,
-          payment_method: "Card",
-          payment_status: "paid",
-          status: "completed",
-          customer: "Amit Kumar",
-          time: "1 hour ago",
-        },
-      ];
-
-      setOrders(simulatedOrders);
-      calculateStats(simulatedOrders);
-      setLoading(false);
     }
   };
 
@@ -229,6 +132,9 @@ recent_orders)
     }));
   };
 
+  const red = () => {
+    window.location.replace("ShopOrders");
+  };
   const getStatusClass = (status) => {
     const classes = {
       completed:
@@ -248,26 +154,27 @@ recent_orders)
     return classes[status] || "";
   };
 
-  const handleViewOrder = (orderId) => {
-    alert(`Viewing order ${orderId}`);
-    // Navigate to order details or open modal
-  };
-
-  const handlePrintOrder = (orderId) => {
-    alert(`Starting print for order ${orderId}`);
-    // Trigger print job
-  };
-
-  // const filteredOrders =
-  //   filterStatus === "all"
-  //     ? orders
-  //     : orders.filter((order) => order.status === filterStatus);
-
   const toggleShopStatus = () => {
-    setShopInfo((prev) => ({
-      ...prev,
-      status: prev.status === "open" ? "closed" : "open",
-    }));
+    const acc = shopInfo.status 
+    console.log(acc)
+    fetch(API + "/api/shop/shopname.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user_id,
+        action: acc
+      }),
+      
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log(data)
+      window.location.reload()
+      setTimeout(() => {
+        
+      }, 1000);
+    })
+    
   };
 
   return (
@@ -327,8 +234,7 @@ recent_orders)
             Total Orders
           </h3>
           <p className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">
-            {loading ? "..." : data.cards.total_orders
-}
+            {loading ? "..." : data.cards.total_orders}
           </p>
           <p className="text-xs mt-1 text-green-500">
             <i className="fas fa-arrow-up"></i> {stats.ordersGrowth}%
@@ -532,7 +438,9 @@ recent_orders)
                       <div className="flex items-center gap-1">
                         <span>{order.payment_type}</span>
                         <span className="text-gray-500">•</span>
-                        <span className="font-semibold">₹{order.payment_amount}</span>
+                        <span className="font-semibold">
+                          ₹{order.payment_amount}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden md:table-cell">
@@ -556,21 +464,12 @@ recent_orders)
                     <td className="px-4 md:px-6 py-4">
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleViewOrder(order.id)}
+                          onClick={() => red()}
                           className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
                           title="View Details"
                         >
                           <i className="fas fa-eye"></i>
                         </button>
-                        {order.status === "pending" && (
-                          <button
-                            onClick={() => handlePrintOrder(order.id)}
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                            title="Start Printing"
-                          >
-                            <i className="fas fa-play"></i>
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ShopOrders = () => {
+const PrintOrders = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -540,4 +540,4 @@ const ShopOrders = () => {
   );
 };
 
-export default ShopOrders;
+export default PrintOrders;
