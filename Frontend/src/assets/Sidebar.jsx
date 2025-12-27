@@ -83,10 +83,10 @@ useEffect(() => {
                 onClick={closeSidebar}
               />
               <NavItem
-                to="/InventoryPage"
+                to="/PrintOrders"
                 icon={FaHome}
-                label="Inventory Page"
-                isActive={location.pathname === "/InventoryPage"}
+                label="Print Orders"
+                isActive={location.pathname === "/PrintOrders"}
                 onClick={closeSidebar}
               />
               <NavItem
