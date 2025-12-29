@@ -189,16 +189,25 @@ const ProfileSettings = () => {
   };
 
   const handleDeleteAccount = () => {
-    // API call to delete account
-    // await fetch('https://your-api.com/api/delete-account', {
-    //   method: 'DELETE'
-    // });
+    deleteAccount();
 
     setShowDeleteModal(false);
     showToast(
       "Account deletion initiated. You will receive a confirmation email.",
       "success"
     );
+  };
+  const deleteAccount = async () => {
+    if (!confirm("Are you sure? This action cannot be undone.")) return;
+
+    const res = await fetch(api + "/backend/delete-acc.php", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: checkSession() }),
+    });
+
+    // const data = await res.json();
+    // console.log(data)
   };
 
   const showToast = (message, type = "success") => {
