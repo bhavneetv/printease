@@ -104,7 +104,7 @@ useEffect(() => {
                 onClick={closeSidebar}
               />
                    <NavItem
-                to="/Profile"
+                to="/ShopProfile"
                 icon={FaUser}
                 label="Profile"
                 isActive={location.pathname === "/Profile"}
@@ -151,20 +151,8 @@ useEffect(() => {
                 isActive={location.pathname === "/Myorders"}
                 onClick={closeSidebar}
               />
-              <NavItem
-                to="/Payments"
-                icon={FaCreditCard}
-                label="Payments"
-                isActive={location.pathname === "/Payments"}
-                onClick={closeSidebar}
-              />
-              <NavItem
-                to="/Profile"
-                icon={FaUser}
-                label="Profile"
-                isActive={location.pathname === "/Profile"}
-                onClick={closeSidebar}
-              />
+         
+       
               <NavItem
                 style={{ display: user ? "none" : "block" }}
                 to="/login"

@@ -11,6 +11,7 @@ import ShopDashboard from "./Pages/Shop/ShopDashboard.jsx";
 import { OrderDetailsPage } from "./Pages/Shop/OrderDetailsPage.jsx";
 import ShopOrders from "./Pages/Shop/ShopOrder.jsx";
 import PrintOrders from "./Pages/Shop/PrintOrders.jsx";
+import ShopProfile from "./Pages/Shop/ShopProfile.jsx";
 
 function App() {
   // How login credentials are sent From the server
@@ -59,6 +60,10 @@ function App() {
         {
           path: "/ShopDashboard",
           element: <ShopDashboard />,
+        },
+        {
+          path: "/ShopProfile",
+          element: <ShopProfile />,
         },
      
         {

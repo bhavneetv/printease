@@ -6,6 +6,7 @@ import {
   FaMoon,
   FaSun,
   FaBell,
+  FaUser,
   FaChevronDown,
   FaCreditCard,
   FaSignOutAlt,
@@ -15,6 +16,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import Sidebar from "./Sidebar";
+import { Link } from "react-router-dom";
 
 export default function Navbar({ onToggleTheme, isDark, userName }) {
   const [open, setOpen] = useState(false); 
@@ -308,9 +310,11 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                 {/* DROPDOWN MENU */}
                 {open && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  <Link to="/Profile">
                     <a className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-t-lg transition-colors duration-200">
-                      <FaCreditCard className="mr-2" /> Settings
+                      <FaUser className="mr-2" /> Profile
                     </a>
+                  </Link>
                     <a className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer rounded-b-lg transition-colors duration-200">
                       <FaSignOutAlt className="mr-2" /> Logout
                     </a>
