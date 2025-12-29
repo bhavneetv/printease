@@ -4,7 +4,7 @@ include "../config/conn.php";
 
 $user_id = $_POST['user_id'] ?? null;
 
-if(!$user_id){
+if (!$user_id) {
     echo json_encode([
         "status" => "error",
         "message" => "user_id is required"
@@ -12,17 +12,14 @@ if(!$user_id){
     exit;
 }
 
-// --------------------
-// 1. GET USER PROFILE
-// --------------------
-$sql = "SELECT user_id, full_name, email, phone, address ,created_at
+$sql = "SELECT user_id, full_name, email, phone, password, address ,created_at
         FROM users 
         WHERE user_id = '$user_id' 
         LIMIT 1";
 
 $result = mysqli_query($conn, $sql);
 
-if(mysqli_num_rows($result) == 0){
+if (mysqli_num_rows($result) == 0) {
     echo json_encode([
         "status" => "error",
         "message" => "User not found"
@@ -31,13 +28,16 @@ if(mysqli_num_rows($result) == 0){
 }
 
 $user = mysqli_fetch_assoc($result);
+$pas = 1;
+
+if ($user["password"] == "") {
+    $pas = 0;
+}
 
 // Profile Image URL
 $profileImage = "https://ui-avatars.com/api/?name=" . urlencode($user["full_name"]) . "&background=667eea&color=fff&bold=true&size=120";
 
-// ------------------------------
-// 2. GET TOTAL ORDERS + SPENDING
-// ------------------------------
+
 $orderQuery = "
     SELECT 
         COUNT(*) AS total_orders,
@@ -49,9 +49,7 @@ $orderQuery = "
 $orderResult = mysqli_query($conn, $orderQuery);
 $order = mysqli_fetch_assoc($orderResult);
 
-// ------------------------------
-// 3. FINAL JSON OUTPUT
-// ------------------------------
+
 echo json_encode([
     "status" => "success",
     "data" => [
@@ -59,6 +57,7 @@ echo json_encode([
         "email"        => $user["email"],
         "phone"        => $user["phone"] ?? "",
         "address"      => $user["address"] ?? "",
+        "pass"          => $pas,
         "paymentMode"  => $user["payment_mode"] ?? "",
         "upiId"        => $user["upi_id"] ?? "",
         "profileImage" => $profileImage,
@@ -67,4 +66,3 @@ echo json_encode([
         "crea"         => date("M Y", strtotime($user["created_at"]))
     ]
 ]);
-?>

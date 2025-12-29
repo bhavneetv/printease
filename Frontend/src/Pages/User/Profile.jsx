@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const ProfileSettings = () => {
   let api = import.meta.env.VITE_API;
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
   const [profileData, setProfileData] = useState({
-    full_name: '',
-    email: '',
-    phone: '',
-    address: '',
-    paymentMode: 'upi',
-    upiId: '',
-    profileImage: '',
+    full_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    paymentMode: "upi",
+    upiId: "",
+    profileImage: "",
     totalOrders: 0,
     totalSpent: 0,
-    crea: ''
+    crea: "",
+    user_id: 0,
   });
   const [errors, setErrors] = useState({});
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // Fetch profile data
@@ -31,9 +36,9 @@ const ProfileSettings = () => {
   }, []);
 
   const checkSession = () => {
-    let user = sessionStorage.getItem('user') || 0;
+    let user = sessionStorage.getItem("user") || 0;
     if (user == 0) {
-      window.location.href = '/login';
+      window.location.href = "/login";
       return false;
     }
     user = atob(user);
@@ -41,7 +46,7 @@ const ProfileSettings = () => {
     return user;
     // console.log("User ID from session:", user);
   };
-  checkSession();
+  profileData.user_id = checkSession();
 
   const fetchProfileData = async () => {
     try {
@@ -52,36 +57,43 @@ const ProfileSettings = () => {
 
       const res = await fetch(`${api}api/fetchProfile.php`, {
         method: "POST",
-        body: formData
+        body: formData,
       });
 
       const data = await res.json();
-      // console.log("Raw profile data:", data); // Debugging line
+      console.log("Raw profile data:", data);
+      // Debugging line
 
+      //handle the issue
+      handelPasshide(data.data.pass);
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       setProfileData(data.data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
       setLoading(false);
     }
   };
 
+  const handelPasshide = (val) => {
+    console.log(val ? " pass" : "no");
+  };
+
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setProfileData(prev => ({ ...prev, [id]: value }));
+    setProfileData((prev) => ({ ...prev, [id]: value }));
 
     // Clear error when user starts typing
     if (errors[id]) {
-      setErrors(prev => ({ ...prev, [id]: '' }));
+      setErrors((prev) => ({ ...prev, [id]: "" }));
     }
   };
 
   const handlePasswordChange = (e) => {
     const { id, value } = e.target;
-    setPasswordData(prev => ({ ...prev, [id]: value }));
+    setPasswordData((prev) => ({ ...prev, [id]: value }));
   };
 
   const validateEmail = (email) => {
@@ -90,8 +102,9 @@ const ProfileSettings = () => {
   };
 
   const validatePhone = (phone) => {
-    const re = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,5}[)]?[-\s\.]?[0-9]{4,6}$/;
-    return re.test(phone.replace(/\s/g, ''));
+    const re =
+      /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,5}[)]?[-\s\.]?[0-9]{4,6}$/;
+    return re.test(phone.replace(/\s/g, ""));
   };
 
   const handleSubmit = async (e) => {
@@ -100,17 +113,17 @@ const ProfileSettings = () => {
 
     // Validate Full Name
     if (profileData.fullName.trim().length < 2) {
-      newErrors.fullName = 'Name must be at least 2 characters long';
+      newErrors.fullName = "Name must be at least 2 characters long";
     }
 
     // Validate Email
     if (!validateEmail(profileData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Validate Phone
     if (!validatePhone(profileData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = "Please enter a valid phone number";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -118,13 +131,16 @@ const ProfileSettings = () => {
       return;
     }
 
-    // API call to update profile
-    // const response = await fetch('https://your-api.com/api/profile', {
-    //   method: 'PUT',
-    //   body: JSON.stringify(profileData)
-    // });
+    const response = await fetch(api + "backend/update-profile.php", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(profileData),
+    });
 
-    showToast('Profile updated successfully!', 'success');
+    const data = await response.json();
+    showToast("Profile updated successfully!", "success");
   };
 
   const handleCancel = () => {
@@ -137,8 +153,8 @@ const ProfileSettings = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setProfileData(prev => ({ ...prev, profileImage: e.target.result }));
-        showToast('Profile picture updated successfully!', 'success');
+        setProfileData((prev) => ({ ...prev, profileImage: e.target.result }));
+        showToast("Profile picture updated successfully!", "success");
       };
       reader.readAsDataURL(file);
     }
@@ -148,12 +164,12 @@ const ProfileSettings = () => {
     e.preventDefault();
 
     if (passwordData.newPassword.length < 8) {
-      showToast('Password must be at least 8 characters long', 'error');
+      showToast("Password must be at least 8 characters long", "error");
       return;
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast('Passwords do not match', 'error');
+      showToast("Passwords do not match", "error");
       return;
     }
 
@@ -164,8 +180,12 @@ const ProfileSettings = () => {
     // });
 
     setShowPasswordModal(false);
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    showToast('Password changed successfully!', 'success');
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    showToast("Password changed successfully!", "success");
   };
 
   const handleDeleteAccount = () => {
@@ -175,13 +195,16 @@ const ProfileSettings = () => {
     // });
 
     setShowDeleteModal(false);
-    showToast('Account deletion initiated. You will receive a confirmation email.', 'success');
+    showToast(
+      "Account deletion initiated. You will receive a confirmation email.",
+      "success"
+    );
   };
 
-  const showToast = (message, type = 'success') => {
+  const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
     setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' });
+      setToast({ show: false, message: "", type: "success" });
     }, 3000);
   };
 
@@ -216,8 +239,18 @@ const ProfileSettings = () => {
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed top-24 right-5 z-50 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 toast-enter`}>
-          <i className={`fas ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+        <div
+          className={`fixed top-24 right-5 z-50 ${
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 toast-enter`}
+        >
+          <i
+            className={`fas ${
+              toast.type === "success"
+                ? "fa-check-circle"
+                : "fa-exclamation-circle"
+            }`}
+          ></i>
           <span>{toast.message}</span>
         </div>
       )}
@@ -247,7 +280,7 @@ const ProfileSettings = () => {
                     className="w-30 h-30 rounded-full border-4 border-white dark:border-gray-800 shadow-lg"
                     alt="Profile"
                   />
-                  
+
                   <input
                     type="file"
                     id="imageUpload"
@@ -258,31 +291,35 @@ const ProfileSettings = () => {
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-1">
-                  {loading ? '...' : profileData.fullName}
+                  {loading ? "..." : profileData.fullName}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Premium Member</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Premium Member
+                </p>
 
                 <div className="w-full space-y-3">
                   <div className="flex items-center text-sm">
                     <i className="fas fa-envelope w-5 text-gray-400"></i>
                     <span className="ml-3 text-gray-600 dark:text-gray-400">
-                      {loading ? '...' : profileData.email}
+                      {loading ? "..." : profileData.email}
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <i className="fas fa-phone w-5 text-gray-400"></i>
                     <span className="ml-3 text-gray-600 dark:text-gray-400">
-                      {loading ? '...' : profileData.phone}
+                      {loading ? "..." : profileData.phone}
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <i className="fas fa-calendar w-5 text-gray-400"></i>
-                    <span className="ml-3 text-gray-600 dark:text-gray-400">{profileData.crea}</span>
+                    <span className="ml-3 text-gray-600 dark:text-gray-400">
+                      {profileData.crea}
+                    </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <i className="fas fa-map-marker-alt w-5 text-gray-400"></i>
                     <span className="ml-3 text-gray-600 dark:text-gray-400">
-                      {loading ? '...' : profileData.address}
+                      {loading ? "..." : profileData.address}
                     </span>
                   </div>
                 </div>
@@ -291,15 +328,19 @@ const ProfileSettings = () => {
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                       <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                        {loading ? '...' : profileData.totalOrders}
+                        {loading ? "..." : profileData.totalOrders}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Total Orders</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Total Orders
+                      </p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                        {loading ? '...' : `₹${profileData.totalSpent}`}
+                        {loading ? "..." : `₹${profileData.totalSpent}`}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Total Spent</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Total Spent
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -331,54 +372,72 @@ const ProfileSettings = () => {
                   id="fullName"
                   value={profileData.fullName}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.fullName
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.fullName && (
-                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.fullName}</p>
+                  <p className="text-red-500 text-xs mt-1 error-shake">
+                    {errors.fullName}
+                  </p>
                 )}
               </div>
 
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <i className="fas fa-envelope mr-2 text-gray-400"></i>Email Address
+                  <i className="fas fa-envelope mr-2 text-gray-400"></i>Email
+                  Address
                 </label>
                 <input
                   type="email"
                   id="email"
                   value={profileData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.email
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.email}</p>
+                  <p className="text-red-500 text-xs mt-1 error-shake">
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
               {/* Phone Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <i className="fas fa-phone mr-2 text-gray-400"></i>Phone Number
+                  <i className="fas fa-phone mr-2 text-gray-400"></i>Phone
+                  Number
                 </label>
                 <input
                   type="tel"
                   id="phone"
                   value={profileData.phone}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
+                  className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border ${
+                    errors.phone
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  } rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition`}
                 />
                 {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1 error-shake">{errors.phone}</p>
+                  <p className="text-red-500 text-xs mt-1 error-shake">
+                    {errors.phone}
+                  </p>
                 )}
               </div>
 
               {/* Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <i className="fas fa-map-marker-alt mr-2 text-gray-400"></i>Address
+                  <i className="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                  Address
                 </label>
                 <textarea
                   id="address"
@@ -388,8 +447,6 @@ const ProfileSettings = () => {
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                 ></textarea>
               </div>
-
-            
 
               {/* Save Button */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
@@ -412,7 +469,9 @@ const ProfileSettings = () => {
           {/* Account Actions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mt-4 md:mt-6">
             <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-white">Account Actions</h2>
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                Account Actions
+              </h2>
             </div>
             <div className="p-4 md:p-6 space-y-4">
               <button
@@ -449,7 +508,9 @@ const ProfileSettings = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Change Password</h3>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                Change Password
+              </h3>
             </div>
             <div className="p-6 space-y-4">
               <div>
@@ -475,7 +536,9 @@ const ProfileSettings = () => {
                   onChange={handlePasswordChange}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                 />
-                <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Must be at least 8 characters
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -519,17 +582,19 @@ const ProfileSettings = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-red-600 dark:text-red-400">Delete Account</h3>
+              <h3 className="text-xl font-bold text-red-600 dark:text-red-400">
+                Delete Account
+              </h3>
             </div>
             <div className="p-6">
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Are you sure you want to delete your account? This action cannot be undone and all
-                your data will be permanently removed.
+                Are you sure you want to delete your account? This action cannot
+                be undone and all your data will be permanently removed.
               </p>
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  <i className="fas fa-exclamation-triangle mr-2"></i>Warning: This action is
-                  irreversible!
+                  <i className="fas fa-exclamation-triangle mr-2"></i>Warning:
+                  This action is irreversible!
                 </p>
               </div>
               <div className="flex gap-3">
@@ -554,7 +619,7 @@ const ProfileSettings = () => {
       {/* Footer */}
       <footer className="mt-8 text-center pb-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          © 2025 PrintEase | Designed by{' '}
+          © 2025 PrintEase | Designed by{" "}
           <span className="font-semibold text-purple-600 dark:text-purple-400">
             Bhavneet Verma
           </span>
