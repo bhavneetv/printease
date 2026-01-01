@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
 
 const ShopOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -13,7 +14,8 @@ const ShopOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  const API = import.meta.env.VITE_API || "https://your-api-endpoint.com/";
+  const API = import.meta.env.VITE_API;
+  const user = isLoggedIn("shopkeeper");
 
   // Fetch orders from API
   useEffect(() => {
@@ -23,148 +25,38 @@ const ShopOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      // console.log(user);
 
-      // Replace with your actual API endpoint and authentication
-      const user_id = localStorage.getItem("shopkeeper_id") || "shop_123";
-
-      const response = await fetch(`${API}api/shop/orders.php`, {
+      const response = await fetch(`${API}api/shop/shopOrders.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: user_id,
-          action: "get_all_orders",
+          accepted_by: user,
         }),
       });
 
       const data = await response.json();
+      // console.log(data);
 
       if (data.success) {
         setOrders(data.orders);
         setFilteredOrders(data.orders);
-      } else {
-        // Fallback to dummy data if API fails
-        setOrders(dummyOrders);
-        setFilteredOrders(dummyOrders);
-      }
+      } 
 
       setLoading(false);
     } catch (error) {
       console.error("Error fetching orders:", error);
-      // Use dummy data on error
-      setOrders(dummyOrders);
-      setFilteredOrders(dummyOrders);
+
       setLoading(false);
     }
   };
 
-  // Dummy data for demonstration
-  const dummyOrders = [
-    {
-      order_id: "ORD001",
-      document_name: "Project Report.pdf",
-      document_type: "PDF",
-      customer_name: "Rahul Sharma",
-      customer_phone: "+91 98765 43210",
-      pages: 25,
-      copies: 2,
-      color_type: "Black & White",
-      print_side: "Double Side",
-      payment_method: "UPI",
-      payment_status: "paid",
-      status: "completed",
-      amount: 150,
-      created_date: "2025-12-27 10:30 AM",
-      instructions: "Please staple the pages together",
-    },
-    {
-      order_id: "ORD002",
-      document_name: "Assignment.docx",
-      document_type: "DOCX",
-      customer_name: "Priya Patel",
-      customer_phone: "+91 87654 32109",
-      pages: 10,
-      copies: 1,
-      color_type: "Color",
-      print_side: "Single Side",
-      payment_method: "Cash",
-      payment_status: "pending",
-      status: "printing",
-      amount: 120,
-      created_date: "2025-12-27 11:15 AM",
-      instructions: "High quality print needed",
-    },
-    {
-      order_id: "ORD003",
-      document_name: "Resume.pdf",
-      document_type: "PDF",
-      customer_name: "Amit Kumar",
-      customer_phone: "+91 76543 21098",
-      pages: 3,
-      copies: 5,
-      color_type: "Black & White",
-      print_side: "Single Side",
-      payment_method: "UPI",
-      payment_status: "paid",
-      status: "pending",
-      amount: 45,
-      created_date: "2025-12-27 12:00 PM",
-      instructions: "Premium paper preferred",
-    },
-    {
-      order_id: "ORD004",
-      document_name: "Presentation.pptx",
-      document_type: "PPTX",
-      customer_name: "Sneha Desai",
-      customer_phone: "+91 65432 10987",
-      pages: 20,
-      copies: 1,
-      color_type: "Color",
-      print_side: "Single Side",
-      payment_method: "UPI",
-      payment_status: "paid",
-      status: "completed",
-      amount: 200,
-      created_date: "2025-12-27 09:45 AM",
-      instructions: "None",
-    },
-    {
-      order_id: "ORD005",
-      document_name: "Study Notes.pdf",
-      document_type: "PDF",
-      customer_name: "Vikram Singh",
-      customer_phone: "+91 54321 09876",
-      pages: 50,
-      copies: 1,
-      color_type: "Black & White",
-      print_side: "Double Side",
-      payment_method: "Cash",
-      payment_status: "pending",
-      status: "pending",
-      amount: 125,
-      created_date: "2025-12-27 01:30 PM",
-      instructions: "Spiral binding required",
-    },
-    {
-      order_id: "ORD006",
-      document_name: "Invoice Template.xlsx",
-      document_type: "XLSX",
-      customer_name: "Anjali Mehta",
-      customer_phone: "+91 43210 98765",
-      pages: 5,
-      copies: 3,
-      color_type: "Color",
-      print_side: "Single Side",
-      payment_method: "UPI",
-      payment_status: "paid",
-      status: "printing",
-      amount: 90,
-      created_date: "2025-12-27 02:15 PM",
-      instructions: "None",
-    },
-  ];
-
+  const redirectPrint = () => {
+    window.location.href = "/PrintOrders";
+    
+  }
   // Apply filters and search
   useEffect(() => {
     let result = orders;
@@ -215,6 +107,7 @@ const ShopOrders = () => {
       completed:
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
       printing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      placed: "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
       pending:
         "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     };
@@ -318,6 +211,7 @@ const ShopOrders = () => {
               className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
             >
               <option value="all">All Status</option>
+              <option value="placed">Placed</option>
               <option value="pending">Pending</option>
               <option value="printing">Printing</option>
               <option value="completed">Completed</option>
@@ -351,7 +245,7 @@ const ShopOrders = () => {
               className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200"
             >
               <option value="all">All Methods</option>
-              <option value="UPI">UPI</option>
+              <option value="upi">UPI</option>
               <option value="Cash">Cash</option>
             </select>
           </div>
@@ -516,7 +410,7 @@ const ShopOrders = () => {
                           >
                             {order.payment_status}
                           </span>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
                             {order.payment_method}
                           </div>
                         </div>
@@ -833,9 +727,9 @@ const ShopOrders = () => {
                 >
                   Close
                 </button>
-                <button className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2">
+                <button onClick={redirectPrint} className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2">
                   <i className="fas fa-print"></i>
-                  Print Receipt
+                  Print Order
                 </button>
               </div>
             </div>
