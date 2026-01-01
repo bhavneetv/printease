@@ -66,7 +66,7 @@ const ProfileSettings = () => {
 
       //handle the issue
       handelPasshide(data.data.pass);
-
+// console.log(handelPasshide)
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setProfileData(data.data);
@@ -508,15 +508,15 @@ const ProfileSettings = () => {
 
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        <button disabled={handelPasshide}
+          className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 ${handelPasshide ? "opacity-50 cursor-not-allowed" : ""}`}
           onClick={() => setShowPasswordModal(false)}
         >
           <div
             className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div disabled={handelPasshide} className={`p-6 border-b border-gray-200 dark:border-gray-700 `}>
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">
                 Change Password
               </h3>
@@ -577,7 +577,7 @@ const ProfileSettings = () => {
               </div>
             </div>
           </div>
-        </div>
+        </button>
       )}
 
       {/* Delete Account Modal */}
