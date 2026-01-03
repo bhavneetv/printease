@@ -1,169 +1,363 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 
-const PrintOrders = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
+const PrintOrderManagement = () => {
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isCollecting, setIsCollecting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sample dummy data
-  const orders = [
-    {
-      id: 'ORD-001',
-      documentName: 'Project_Report.pdf',
-      documentType: 'PDF Document',
-      totalPages: 45,
-      copies: 2,
-      colorType: 'Black & White',
-      sidedType: 'Double-sided',
-      amount: 180,
-      paymentMethod: 'UPI',
-      paymentStatus: 'Paid',
-      orderStatus: 'Pending',
-      ownerName: 'Rahul Sharma',
-      specialNotes: 'Please bind after printing',
-      timestamp: '2025-11-15 10:30 AM'
-    },
-    {
-      id: 'ORD-002',
-      documentName: 'Marketing_Presentation.pptx',
-      documentType: 'PowerPoint',
-      totalPages: 20,
-      copies: 5,
-      colorType: 'Color',
-      sidedType: 'Single-sided',
-      amount: 1000,
-      paymentMethod: 'Cash',
-      paymentStatus: 'Pending',
-      orderStatus: 'Pending',
-      ownerName: 'Priya Singh',
-      specialNotes: 'Urgent - needed by 2 PM',
-      timestamp: '2025-11-15 11:15 AM'
-    },
-    {
-      id: 'ORD-003',
-      documentName: 'Resume_Final.docx',
-      documentType: 'Word Document',
-      totalPages: 3,
-      copies: 10,
-      colorType: 'Black & White',
-      sidedType: 'Single-sided',
-      amount: 60,
-      paymentMethod: 'UPI',
-      paymentStatus: 'Paid',
-      orderStatus: 'Completed',
-      ownerName: 'Amit Kumar',
-      specialNotes: '',
-      timestamp: '2025-11-15 09:45 AM'
-    },
-    {
-      id: 'ORD-004',
-      documentName: 'Thesis_Chapter_3.pdf',
-      documentType: 'PDF Document',
-      totalPages: 68,
-      copies: 1,
-      colorType: 'Black & White',
-      sidedType: 'Double-sided',
-      amount: 136,
-      paymentMethod: 'Cash',
-      paymentStatus: 'Paid',
-      orderStatus: 'Printing',
-      ownerName: 'Sneha Patel',
-      specialNotes: 'Handle with care',
-      timestamp: '2025-11-15 10:00 AM'
-    },
-    {
-      id: 'ORD-005',
-      documentName: 'Brochure_Design.pdf',
-      documentType: 'PDF Document',
-      totalPages: 8,
-      copies: 50,
-      colorType: 'Color',
-      sidedType: 'Double-sided',
-      amount: 4000,
-      paymentMethod: 'UPI',
-      paymentStatus: 'Paid',
-      orderStatus: 'Completed',
-      ownerName: 'Vikram Mehta',
-      specialNotes: 'Glossy paper preferred',
-      timestamp: '2025-11-14 04:30 PM'
-    },
-    {
-      id: 'ORD-006',
-      documentName: 'Assignment_Solutions.pdf',
-      documentType: 'PDF Document',
-      totalPages: 15,
-      copies: 3,
-      colorType: 'Black & White',
-      sidedType: 'Single-sided',
-      amount: 90,
-      paymentMethod: 'Cash',
-      paymentStatus: 'Pending',
-      orderStatus: 'Pending',
-      ownerName: 'Anjali Verma',
-      specialNotes: '',
-      timestamp: '2025-11-15 11:45 AM'
+  const itemsPerPage = 9;
+  const API = import.meta.env.VITE_API || "http://localhost:8080/";
+
+  // Fetch orders from backend
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  async function fetchOrders() {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API}api/shop/order-print.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accepted_by: 4, // Replace with session user id
+        }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      
+      if (data && Array.isArray(data)) {
+        setOrders(data);
+        setFilteredOrders(data);
+      } else {
+        // Fallback to dummy data if API fails
+        const dummyOrders = [
+          {
+            id: "ORD-001",
+            documentName: "Project_Report.pdf",
+            documentType: "PDF Document",
+            totalPages: 45,
+            copies: 2,
+            colorType: "Black & White",
+            sidedType: "Double-sided",
+            amount: 180,
+            paymentMethod: "UPI",
+            paymentStatus: "Pending",
+            orderStatus: "Pending",
+            ownerName: "Rahul Sharma",
+            specialNotes: "Please bind after printing",
+            timestamp: "2025-01-03 10:30 AM",
+          },
+          {
+            id: "ORD-002",
+            documentName: "Marketing_Presentation.pptx",
+            documentType: "PowerPoint",
+            totalPages: 20,
+            copies: 5,
+            colorType: "Color",
+            sidedType: "Single-sided",
+            amount: 1000,
+            paymentMethod: "Cash",
+            paymentStatus: "Pending",
+            orderStatus: "Pending",
+            ownerName: "Priya Singh",
+            specialNotes: "Urgent - needed by 2 PM",
+            timestamp: "2025-01-03 11:15 AM",
+          },
+          {
+            id: "ORD-003",
+            documentName: "Resume_Final.docx",
+            documentType: "Word Document",
+            totalPages: 3,
+            copies: 10,
+            colorType: "Black & White",
+            sidedType: "Single-sided",
+            amount: 60,
+            paymentMethod: "UPI",
+            paymentStatus: "Paid",
+            orderStatus: "Completed",
+            ownerName: "Amit Kumar",
+            specialNotes: "",
+            timestamp: "2025-01-03 09:45 AM",
+          },
+          {
+            id: "ORD-004",
+            documentName: "Thesis_Chapter_3.pdf",
+            documentType: "PDF Document",
+            totalPages: 68,
+            copies: 1,
+            colorType: "Black & White",
+            sidedType: "Double-sided",
+            amount: 136,
+            paymentMethod: "Cash",
+            paymentStatus: "Paid",
+            orderStatus: "Printing",
+            ownerName: "Sneha Patel",
+            specialNotes: "Handle with care",
+            timestamp: "2025-01-03 10:00 AM",
+          },
+          {
+            id: "ORD-005",
+            documentName: "Brochure_Design.pdf",
+            documentType: "PDF Document",
+            totalPages: 8,
+            copies: 50,
+            colorType: "Color",
+            sidedType: "Double-sided",
+            amount: 4000,
+            paymentMethod: "UPI",
+            paymentStatus: "Paid",
+            orderStatus: "Completed",
+            ownerName: "Vikram Mehta",
+            specialNotes: "Glossy paper preferred",
+            timestamp: "2025-01-02 04:30 PM",
+          },
+        ];
+        setOrders(dummyOrders);
+        setFilteredOrders(dummyOrders);
+        console.log(dummyOrders)
+      }
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      // Use dummy data on error
+      const dummyOrders = [
+        {
+          id: "ORD-001",
+          documentName: "Project_Report.pdf",
+          documentType: "PDF Document",
+          totalPages: 45,
+          copies: 2,
+          colorType: "Black & White",
+          sidedType: "Double-sided",
+          amount: 180,
+          paymentMethod: "UPI",
+          paymentStatus: "Paid",
+          orderStatus: "Pending",
+          ownerName: "Rahul Sharma",
+          specialNotes: "Please bind after printing",
+          timestamp: "2025-01-03 10:30 AM",
+        },
+      ];
+      setOrders(dummyOrders);
+      setFilteredOrders(dummyOrders);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  }
 
-  const filteredOrders = orders.filter(order => {
-    if (activeFilter === 'pending') return order.orderStatus === 'Pending';
-    if (activeFilter === 'completed') return order.orderStatus === 'Completed';
-    return true;
-  });
+  // Filter and search logic
+  useEffect(() => {
+    let result = [...orders];
 
+    // Apply status filter
+    if (activeFilter === "pending") {
+      result = result.filter((o) => o.orderStatus === "Pending");
+    } else if (activeFilter === "printing") {
+      result = result.filter((o) => o.orderStatus === "Printing");
+    } else if (activeFilter === "completed") {
+      result = result.filter((o) => o.orderStatus === "Completed");
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (o) =>
+          o.id.toLowerCase().includes(query) ||
+          o.ownerName.toLowerCase().includes(query) ||
+          o.documentName.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredOrders(result);
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, orders]);
+
+  // Metrics
   const metrics = {
     totalOrders: orders.length,
-    pendingOrders: orders.filter(o => o.orderStatus === 'Pending').length,
-    completedOrders: orders.filter(o => o.orderStatus === 'Completed').length,
-    totalEarnings: orders.reduce((sum, o) => sum + o.amount, 0)
+    pendingOrders: orders.filter((o) => o.orderStatus === "Pending").length,
+    printingOrders: orders.filter((o) => o.orderStatus === "Printing").length,
+    completedOrders: orders.filter((o) => o.orderStatus === "Completed").length,
+    totalEarnings: orders.reduce((sum, o) => sum + o.amount, 0),
   };
 
-  const handlePrintClick = (order) => {
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  // Action Handlers
+  const handleCollectCash = (order) => {
+    setSelectedOrder(order);
+    setIsCashModalOpen(true);
+  };
+
+  const confirmCashCollection = async () => {
+    setIsCollecting(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // Update order payment status
+    const updatedOrders = orders.map((o) =>
+      o.id === selectedOrder.id ? { ...o, paymentStatus: "Paid" } : o
+    );
+    setOrders(updatedOrders);
+    
+    setIsCollecting(false);
+    setIsCashModalOpen(false);
+  };
+
+  const handleCheckPayment = (order) => {
+    setSelectedOrder(order);
+    setIsPaymentModalOpen(true);
+  };
+
+  const confirmPayment = async () => {
+    setIsCollecting(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsCollecting(false);
+    setIsPaymentModalOpen(false);
+  };
+
+  const handlePrintDocument = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
 
   const handleDownload = async () => {
     setIsDownloading(true);
-    // Simulate download delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsDownloading(false);
-    // Add actual download logic here
-    console.log('Downloading:', selectedOrder.documentName);
+    console.log("Downloading:", selectedOrder.documentName);
   };
 
   const handlePrintNow = async () => {
     setIsPrinting(true);
-    // Simulate print delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsPrinting(false);
-    // Trigger browser print or custom print logic
+    
+    // Update order status to Printing
+    const updatedOrders = orders.map((o) =>
+      o.id === selectedOrder.id ? { ...o, orderStatus: "Printing" } : o
+    );
+    setOrders(updatedOrders);
+    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    
+    // Simulate printing
     window.print();
+    
+    setIsPrinting(false);
+    setIsModalOpen(false);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedOrder(null);
-    setIsDownloading(false);
-    setIsPrinting(false);
+  const markAsCompleted = async (orderId) => {
+    const updatedOrders = orders.map((o) =>
+      o.id === orderId ? { ...o, orderStatus: "Completed" } : o
+    );
+    setOrders(updatedOrders);
+  };
+
+  const getActionButton = (order) => {
+    if (order.orderStatus === "Completed") {
+      return (
+        <button
+          disabled
+          className="w-full bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-4 py-2.5 rounded-lg font-medium cursor-not-allowed"
+        >
+          <i className="fas fa-check-circle mr-2"></i>Completed
+        </button>
+      );
+    }
+
+    if (order.orderStatus === "Printing") {
+      return (
+        <div className="space-y-2">
+          <button
+            disabled
+            className="w-full bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 px-4 py-2.5 rounded-lg font-medium cursor-not-allowed"
+          >
+            <i className="fas fa-spinner fa-spin mr-2"></i>Printing...
+          </button>
+          <button
+            onClick={() => markAsCompleted(order.id)}
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
+          >
+            <i className="fas fa-check mr-2"></i>Mark Completed
+          </button>
+        </div>
+      );
+    }
+
+    if (order.paymentMethod === "cash" && order.paymentStatus === "Pending") {
+      return (
+        <button
+          onClick={() => handleCollectCash(order)}
+          className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
+        >
+          <i className="fas fa-money-bill-wave mr-2"></i>Collect Cash
+        </button>
+      );
+    }
+
+    if (order.paymentMethod === "upi" && order.paymentStatus === "Pending") {
+      return (
+        <button
+          onClick={() => handleCheckPayment(order)}
+          className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
+        >
+          <i className="fas fa-mobile-alt mr-2"></i>Check Payment
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => handlePrintDocument(order)}
+        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
+      >
+        <i className="fas fa-print mr-2"></i>Print Document
+      </button>
+    );
   };
 
   const getStatusBadge = (status) => {
     const styles = {
-      Pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-      Printing: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-      Completed: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+      Pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+      Printing: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+      Completed: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
     };
     return styles[status] || styles.Pending;
   };
 
   const getPaymentStatusBadge = (status) => {
-    return status === 'Paid' 
-      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-      : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+    return status === "Paid"
+      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+      : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <i className="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
+          <p className="text-gray-600 dark:text-gray-400">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 md:p-6">
@@ -173,12 +367,12 @@ const PrintOrders = () => {
           📦 Order Management
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
-          Manage and track all your print orders
+          Process and manage all print orders
         </p>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
           <div className="flex items-center justify-between mb-3">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
@@ -200,7 +394,19 @@ const PrintOrders = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.pendingOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Pending Orders</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Pending</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+              <i className="fas fa-print text-white text-xl"></i>
+            </div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
+            {metrics.printingOrders}
+          </p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Printing</p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
@@ -212,12 +418,12 @@ const PrintOrders = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.completedOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Completed Orders</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Completed</p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
               <i className="fas fa-rupee-sign text-white text-xl"></i>
             </div>
           </div>
@@ -228,45 +434,72 @@ const PrintOrders = () => {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Search and Filter Bar */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeFilter === 'all'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            <i className="fas fa-list mr-2"></i>All Orders ({orders.length})
-          </button>
-          <button
-            onClick={() => setActiveFilter('pending')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeFilter === 'pending'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            <i className="fas fa-clock mr-2"></i>Pending ({metrics.pendingOrders})
-          </button>
-          <button
-            onClick={() => setActiveFilter('completed')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeFilter === 'completed'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            <i className="fas fa-check-circle mr-2"></i>Completed ({metrics.completedOrders})
-          </button>
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Bar */}
+          <div className="flex-1">
+            <div className="relative">
+              <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input
+                type="text"
+                placeholder="Search by Order ID, Customer Name, or Document..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveFilter("all")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === "all"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              All ({orders.length})
+            </button>
+            <button
+              onClick={() => setActiveFilter("pending")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === "pending"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Pending ({metrics.pendingOrders})
+            </button>
+            <button
+              onClick={() => setActiveFilter("printing")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === "printing"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Printing ({metrics.printingOrders})
+            </button>
+            <button
+              onClick={() => setActiveFilter("completed")}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeFilter === "completed"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              Completed ({metrics.completedOrders})
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Orders Grid - Mobile: List View, Desktop: Grid View */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-        {filteredOrders.map((order) => (
+      {/* Orders Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
+        {currentOrders.map((order) => (
           <div
             key={order.id}
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
@@ -290,7 +523,8 @@ const PrintOrders = () => {
                   </div>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  <i className="far fa-clock mr-1"></i>{order.timestamp}
+                  <i className="far fa-clock mr-1"></i>
+                  {order.timestamp}
                 </p>
               </div>
 
@@ -302,7 +536,9 @@ const PrintOrders = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Document</p>
-                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{order.documentName}</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">
+                      {order.documentName}
+                    </p>
                   </div>
                 </div>
 
@@ -312,7 +548,9 @@ const PrintOrders = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Specifications</p>
-                    <p className="font-medium text-sm text-gray-800 dark:text-white">{order.totalPages} pages × {order.copies} copies</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white">
+                      {order.totalPages} pages × {order.copies} copies
+                    </p>
                   </div>
                 </div>
 
@@ -322,7 +560,9 @@ const PrintOrders = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Print Type</p>
-                    <p className="font-medium text-sm text-gray-800 dark:text-white">{order.colorType} • {order.sidedType}</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white">
+                      {order.colorType} • {order.sidedType}
+                    </p>
                   </div>
                 </div>
 
@@ -332,7 +572,12 @@ const PrintOrders = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Payment</p>
-                    <p className="font-bold text-green-600 dark:text-green-400">₹{order.amount} <span className="text-xs font-normal text-gray-600 dark:text-gray-400">via {order.paymentMethod}</span></p>
+                    <p className="font-bold text-green-600 dark:text-green-400">
+                      ₹{order.amount}{" "}
+                      <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+                        via {order.paymentMethod}
+                      </span>
+                    </p>
                   </div>
                 </div>
 
@@ -342,7 +587,9 @@ const PrintOrders = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
-                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{order.ownerName}</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">
+                      {order.ownerName}
+                    </p>
                   </div>
                 </div>
 
@@ -353,185 +600,307 @@ const PrintOrders = () => {
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-gray-500 dark:text-gray-400">Special Notes</p>
-                      <p className="text-xs text-amber-600 dark:text-amber-400">{order.specialNotes}</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        {order.specialNotes}
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Print Button */}
-              <button
-                onClick={() => handlePrintClick(order)}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
-              >
-                <i className="fas fa-print mr-2"></i>Print Order
-              </button>
+              {/* Action Button */}
+              {getActionButton(order)}
             </div>
           </div>
         ))}
       </div>
 
-      {filteredOrders.length === 0 && (
+      {/* Empty State */}
+      {currentOrders.length === 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
           <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-inbox text-gray-400 text-3xl"></i>
           </div>
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No Orders Found</h3>
-          <p className="text-gray-600 dark:text-gray-400">There are no orders matching your filter.</p>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+            No Orders Found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            {searchQuery
+              ? "No orders match your search criteria"
+              : "No orders available for the selected filter"}
+          </p>
         </div>
       )}
 
-      {/* Print Modal */}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <i className="fas fa-chevron-left"></i>
+          </button>
+          
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNum = index + 1;
+            if (
+              pageNum === 1 ||
+              pageNum === totalPages ||
+              (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+            ) {
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentPage === pageNum
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            } else if (
+              pageNum === currentPage - 2 ||
+              pageNum === currentPage + 2
+            ) {
+              return (
+                <span key={pageNum} className="text-gray-400">
+                  ...
+                </span>
+              );
+            }
+            return null;
+          })}
+          
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
+
+      {/* Print Document Modal */}
       {isModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            {/* Background overlay */}
-            <div 
-              className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"
-              onClick={closeModal}
-            ></div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Print Document
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
 
-            {/* Modal panel */}
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-              {/* Modal Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white flex items-center">
-                    <i className="fas fa-print mr-3"></i>
-                    Print Instructions
-                  </h3>
-                  <button
-                    onClick={closeModal}
-                    className="text-white hover:text-gray-200 transition-colors"
-                  >
-                    <i className="fas fa-times text-2xl"></i>
-                  </button>
+            <div className="space-y-4 mb-6">
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Document</p>
+                <p className="font-semibold text-gray-800 dark:text-white">
+                  {selectedOrder.documentName}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Pages</p>
+                  <p className="text-lg font-bold text-gray-800 dark:text-white">
+                    {selectedOrder.totalPages}
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Copies</p>
+                  <p className="text-lg font-bold text-gray-800 dark:text-white">
+                    {selectedOrder.copies}
+                  </p>
                 </div>
               </div>
 
-              {/* Modal Body */}
-              <div className="px-6 py-6 max-h-[70vh] overflow-y-auto">
-                {/* Order ID Badge */}
-                <div className="mb-6 text-center">
-                  <span className="inline-block bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 px-6 py-2 rounded-full font-bold text-lg">
-                    {selectedOrder.id}
-                  </span>
-                </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Print Settings</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                  {selectedOrder.colorType} • {selectedOrder.sidedType}
+                </p>
+              </div>
+            </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Document Name</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.documentName}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Document Type</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.documentType}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Pages</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.totalPages} pages</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Number of Copies</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.copies} copies</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Color Type</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.colorType}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Print Side</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.sidedType}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Payment Method</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.paymentMethod}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Payment Status</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusBadge(selectedOrder.paymentStatus)}`}>
-                      {selectedOrder.paymentStatus}
-                    </span>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Customer Name</p>
-                    <p className="font-semibold text-gray-800 dark:text-white">{selectedOrder.ownerName}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Amount</p>
-                    <p className="font-bold text-green-600 dark:text-green-400 text-lg">₹{selectedOrder.amount}</p>
-                  </div>
-                </div>
-
-                {/* Special Notes */}
-                {selectedOrder.specialNotes && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-400 mb-1">
-                      <i className="fas fa-sticky-note mr-2"></i>Special Instructions
-                    </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">{selectedOrder.specialNotes}</p>
-                  </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50"
+              >
+                {isDownloading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>Downloading...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-download mr-2"></i>Download
+                  </>
                 )}
+              </button>
+              <button
+                onClick={handlePrintNow}
+                disabled={isPrinting}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-50"
+              >
+                {isPrinting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>Printing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-print mr-2"></i>Print Now
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                {/* Estimated Cost */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-400">
-                      <i className="fas fa-calculator mr-2"></i>Estimated Print Cost
-                    </p>
-                    <p className="text-lg font-bold text-blue-800 dark:text-blue-400">₹{selectedOrder.amount}</p>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDownloading ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-download mr-2"></i>
-                        Download File
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={handlePrintNow}
-                    disabled={isPrinting}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isPrinting ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Printing...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-print mr-2"></i>
-                        Print Now
-                      </>
-                    )}
-                  </button>
-                </div>
+      {/* Cash Collection Modal */}
+      {isCashModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-money-bill-wave text-white text-3xl"></i>
               </div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Collect Cash Payment
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Confirm cash collection from customer
+              </p>
+            </div>
+
+            <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
+                <span className="font-semibold text-gray-800 dark:text-white">
+                  {selectedOrder.id}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Customer</span>
+                <span className="font-semibold text-gray-800 dark:text-white">
+                  {selectedOrder.ownerName}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-orange-200 dark:border-orange-800">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Amount to Collect</span>
+                <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  ₹{selectedOrder.amount}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsCashModalOpen(false)}
+                disabled={isCollecting}
+                className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmCashCollection}
+                disabled={isCollecting}
+                className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-50"
+              >
+                {isCollecting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check mr-2"></i>Confirm Collection
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Check Modal */}
+      {isPaymentModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-mobile-alt text-white text-3xl"></i>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Verify UPI Payment
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Check if payment has been received
+              </p>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
+                <span className="font-semibold text-gray-800 dark:text-white">
+                  {selectedOrder.id}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Customer</span>
+                <span className="font-semibold text-gray-800 dark:text-white">
+                  {selectedOrder.ownerName}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-blue-200 dark:border-blue-800">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Expected Amount</span>
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  ₹{selectedOrder.amount}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-6">
+              <p className="text-xs text-amber-800 dark:text-amber-400 flex items-start">
+                <i className="fas fa-info-circle mt-0.5 mr-2"></i>
+                <span>Please verify the payment in your UPI app before confirming</span>
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsPaymentModalOpen(false)}
+                disabled={isCollecting}
+                className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPayment}
+                disabled={isCollecting}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-50"
+              >
+                {isCollecting ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>Verifying...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check mr-2"></i>Payment Received
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -540,4 +909,4 @@ const PrintOrders = () => {
   );
 };
 
-export default PrintOrders;
+export default PrintOrderManagement;
