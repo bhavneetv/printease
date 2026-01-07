@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
 
 const PrintOrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -32,127 +33,22 @@ const PrintOrderManagement = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accepted_by: 4, // Replace with session user id
+          accepted_by: isLoggedIn("shopkeeper"), // Replace with session user id
         }),
       });
 
       const data = await response.json();
       console.log(data);
-      
+
       if (data && Array.isArray(data)) {
         setOrders(data);
         setFilteredOrders(data);
       } else {
         // Fallback to dummy data if API fails
-        const dummyOrders = [
-          {
-            id: "ORD-001",
-            documentName: "Project_Report.pdf",
-            documentType: "PDF Document",
-            totalPages: 45,
-            copies: 2,
-            colorType: "Black & White",
-            sidedType: "Double-sided",
-            amount: 180,
-            paymentMethod: "UPI",
-            paymentStatus: "Pending",
-            orderStatus: "Pending",
-            ownerName: "Rahul Sharma",
-            specialNotes: "Please bind after printing",
-            timestamp: "2025-01-03 10:30 AM",
-          },
-          {
-            id: "ORD-002",
-            documentName: "Marketing_Presentation.pptx",
-            documentType: "PowerPoint",
-            totalPages: 20,
-            copies: 5,
-            colorType: "Color",
-            sidedType: "Single-sided",
-            amount: 1000,
-            paymentMethod: "Cash",
-            paymentStatus: "Pending",
-            orderStatus: "Pending",
-            ownerName: "Priya Singh",
-            specialNotes: "Urgent - needed by 2 PM",
-            timestamp: "2025-01-03 11:15 AM",
-          },
-          {
-            id: "ORD-003",
-            documentName: "Resume_Final.docx",
-            documentType: "Word Document",
-            totalPages: 3,
-            copies: 10,
-            colorType: "Black & White",
-            sidedType: "Single-sided",
-            amount: 60,
-            paymentMethod: "UPI",
-            paymentStatus: "Paid",
-            orderStatus: "Completed",
-            ownerName: "Amit Kumar",
-            specialNotes: "",
-            timestamp: "2025-01-03 09:45 AM",
-          },
-          {
-            id: "ORD-004",
-            documentName: "Thesis_Chapter_3.pdf",
-            documentType: "PDF Document",
-            totalPages: 68,
-            copies: 1,
-            colorType: "Black & White",
-            sidedType: "Double-sided",
-            amount: 136,
-            paymentMethod: "Cash",
-            paymentStatus: "Paid",
-            orderStatus: "Printing",
-            ownerName: "Sneha Patel",
-            specialNotes: "Handle with care",
-            timestamp: "2025-01-03 10:00 AM",
-          },
-          {
-            id: "ORD-005",
-            documentName: "Brochure_Design.pdf",
-            documentType: "PDF Document",
-            totalPages: 8,
-            copies: 50,
-            colorType: "Color",
-            sidedType: "Double-sided",
-            amount: 4000,
-            paymentMethod: "UPI",
-            paymentStatus: "Paid",
-            orderStatus: "Completed",
-            ownerName: "Vikram Mehta",
-            specialNotes: "Glossy paper preferred",
-            timestamp: "2025-01-02 04:30 PM",
-          },
-        ];
-        setOrders(dummyOrders);
-        setFilteredOrders(dummyOrders);
-        console.log(dummyOrders)
       }
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       // Use dummy data on error
-      const dummyOrders = [
-        {
-          id: "ORD-001",
-          documentName: "Project_Report.pdf",
-          documentType: "PDF Document",
-          totalPages: 45,
-          copies: 2,
-          colorType: "Black & White",
-          sidedType: "Double-sided",
-          amount: 180,
-          paymentMethod: "UPI",
-          paymentStatus: "Paid",
-          orderStatus: "Pending",
-          ownerName: "Rahul Sharma",
-          specialNotes: "Please bind after printing",
-          timestamp: "2025-01-03 10:30 AM",
-        },
-      ];
-      setOrders(dummyOrders);
-      setFilteredOrders(dummyOrders);
     } finally {
       setIsLoading(false);
     }
@@ -208,15 +104,23 @@ const PrintOrderManagement = () => {
   };
 
   const confirmCashCollection = async () => {
+    console.log(selectedOrder.id);
     setIsCollecting(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Update order payment status
-    const updatedOrders = orders.map((o) =>
-      o.id === selectedOrder.id ? { ...o, paymentStatus: "Paid" } : o
-    );
-    setOrders(updatedOrders);
-    
+
+    await fetch(`${API}backend/shop/payment-comp.php`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: selectedOrder.id,
+        payment_type: "cash",
+        action: "pay",
+      }),
+    });
+    fetchOrders();
+
     setIsCollecting(false);
     setIsCashModalOpen(false);
   };
@@ -229,6 +133,23 @@ const PrintOrderManagement = () => {
   const confirmPayment = async () => {
     setIsCollecting(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    await fetch(`${API}backend/shop/payment-comp.php`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: selectedOrder.id,
+        payment_type: "upi",
+        action: "pay",
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        // console.log(data);
+        fetchOrders();
+      });
+
     setIsCollecting(false);
     setIsPaymentModalOpen(false);
   };
@@ -239,28 +160,100 @@ const PrintOrderManagement = () => {
   };
 
   const handleDownload = async () => {
-    setIsDownloading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsDownloading(false);
-    console.log("Downloading:", selectedOrder.documentName);
+    try {
+      setIsDownloading(true);
+
+      const res = await fetch(`${API}api/shop/getOrderFile.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message);
+        return;
+      }
+
+      const a = document.createElement("a");
+      a.href = data.file_url;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      console.log("Downloading:", data.file_url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handlePrintNow = async () => {
-    setIsPrinting(true);
-    
-    // Update order status to Printing
-    const updatedOrders = orders.map((o) =>
-      o.id === selectedOrder.id ? { ...o, orderStatus: "Printing" } : o
-    );
-    setOrders(updatedOrders);
-    
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Simulate printing
-    window.print();
-    
-    setIsPrinting(false);
-    setIsModalOpen(false);
+    try {
+      setIsPrinting(true);
+
+      // 1️⃣ Get file path from backend
+      const res = await fetch(`${API}api/shop/getOrderFile.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message);
+        return;
+      }
+
+      await fetch(`${API}backend/shop/payment-comp.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: selectedOrder.id,
+          action: "print",
+        }),
+      });
+
+      const isPDF = data.file_url.toLowerCase().endsWith(".pdf");
+
+      if (isPDF) {
+        const printWindow = window.open(
+          data.file_url,
+          "_blank",
+          "width=900,height=700"
+        );
+
+        printWindow.onload = () => {
+          printWindow.focus();
+          printWindow.print();
+        };
+      }
+      // 5️⃣ NOT PDF → DOWNLOAD
+      else {
+        const a = document.createElement("a");
+        a.href = data.file_url;
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+
+      fetchOrders();
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while printing");
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const markAsCompleted = async (orderId) => {
@@ -335,9 +328,12 @@ const PrintOrderManagement = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      Pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-      Printing: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-      Completed: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+      Pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+      Printing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+      Completed:
+        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
     };
     return styles[status] || styles.Pending;
   };
@@ -382,7 +378,9 @@ const PrintOrderManagement = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.totalOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Total Orders</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+            Total Orders
+          </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
@@ -394,7 +392,9 @@ const PrintOrderManagement = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.pendingOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Pending</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+            Pending
+          </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
@@ -406,7 +406,9 @@ const PrintOrderManagement = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.printingOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Printing</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+            Printing
+          </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
@@ -418,7 +420,9 @@ const PrintOrderManagement = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             {metrics.completedOrders}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Completed</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+            Completed
+          </p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6 hover:shadow-md transition-all duration-300">
@@ -430,7 +434,9 @@ const PrintOrderManagement = () => {
           <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
             ₹{metrics.totalEarnings.toLocaleString()}
           </p>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Total Earnings</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+            Total Earnings
+          </p>
         </div>
       </div>
 
@@ -513,10 +519,18 @@ const PrintOrderManagement = () => {
                       {order.id}
                     </h3>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.orderStatus)}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(
+                          order.orderStatus
+                        )}`}
+                      >
                         {order.orderStatus}
                       </span>
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPaymentStatusBadge(order.paymentStatus)}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPaymentStatusBadge(
+                          order.paymentStatus
+                        )}`}
+                      >
                         {order.paymentStatus}
                       </span>
                     </div>
@@ -535,7 +549,9 @@ const PrintOrderManagement = () => {
                     <i className="fas fa-file-alt text-purple-600 dark:text-purple-400 text-sm"></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Document</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Document
+                    </p>
                     <p className="font-medium text-sm text-gray-800 dark:text-white truncate">
                       {order.documentName}
                     </p>
@@ -547,7 +563,9 @@ const PrintOrderManagement = () => {
                     <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-sm"></i>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Specifications</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Specifications
+                    </p>
                     <p className="font-medium text-sm text-gray-800 dark:text-white">
                       {order.totalPages} pages × {order.copies} copies
                     </p>
@@ -559,7 +577,9 @@ const PrintOrderManagement = () => {
                     <i className="fas fa-palette text-indigo-600 dark:text-indigo-400 text-sm"></i>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Print Type</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Print Type
+                    </p>
                     <p className="font-medium text-sm text-gray-800 dark:text-white">
                       {order.colorType} • {order.sidedType}
                     </p>
@@ -571,7 +591,9 @@ const PrintOrderManagement = () => {
                     <i className="fas fa-rupee-sign text-green-600 dark:text-green-400 text-sm"></i>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Payment</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Payment
+                    </p>
                     <p className="font-bold text-green-600 dark:text-green-400">
                       ₹{order.amount}{" "}
                       <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
@@ -586,7 +608,9 @@ const PrintOrderManagement = () => {
                     <i className="fas fa-user text-orange-600 dark:text-orange-400 text-sm"></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Customer
+                    </p>
                     <p className="font-medium text-sm text-gray-800 dark:text-white truncate">
                       {order.ownerName}
                     </p>
@@ -599,7 +623,9 @@ const PrintOrderManagement = () => {
                       <i className="fas fa-sticky-note text-amber-600 dark:text-amber-400 text-sm"></i>
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Special Notes</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Special Notes
+                      </p>
                       <p className="text-xs text-amber-600 dark:text-amber-400">
                         {order.specialNotes}
                       </p>
@@ -642,7 +668,7 @@ const PrintOrderManagement = () => {
           >
             <i className="fas fa-chevron-left"></i>
           </button>
-          
+
           {[...Array(totalPages)].map((_, index) => {
             const pageNum = index + 1;
             if (
@@ -675,9 +701,11 @@ const PrintOrderManagement = () => {
             }
             return null;
           })}
-          
+
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className="px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
@@ -704,7 +732,9 @@ const PrintOrderManagement = () => {
 
             <div className="space-y-4 mb-6">
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Document</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Document
+                </p>
                 <p className="font-semibold text-gray-800 dark:text-white">
                   {selectedOrder.documentName}
                 </p>
@@ -712,13 +742,17 @@ const PrintOrderManagement = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Pages</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Pages
+                  </p>
                   <p className="text-lg font-bold text-gray-800 dark:text-white">
                     {selectedOrder.totalPages}
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Copies</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Copies
+                  </p>
                   <p className="text-lg font-bold text-gray-800 dark:text-white">
                     {selectedOrder.copies}
                   </p>
@@ -726,7 +760,9 @@ const PrintOrderManagement = () => {
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Print Settings</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  Print Settings
+                </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white">
                   {selectedOrder.colorType} • {selectedOrder.sidedType}
                 </p>
@@ -741,7 +777,8 @@ const PrintOrderManagement = () => {
               >
                 {isDownloading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>Downloading...
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Downloading...
                   </>
                 ) : (
                   <>
@@ -787,19 +824,25 @@ const PrintOrderManagement = () => {
 
             <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Order ID
+                </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
                   {selectedOrder.id}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Customer</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Customer
+                </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
                   {selectedOrder.ownerName}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-orange-200 dark:border-orange-800">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Amount to Collect</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Amount to Collect
+                </span>
                 <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   ₹{selectedOrder.amount}
                 </span>
@@ -852,19 +895,25 @@ const PrintOrderManagement = () => {
 
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Order ID</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Order ID
+                </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
                   {selectedOrder.id}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Customer</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Customer
+                </span>
                 <span className="font-semibold text-gray-800 dark:text-white">
                   {selectedOrder.ownerName}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-blue-200 dark:border-blue-800">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Expected Amount</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Expected Amount
+                </span>
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   ₹{selectedOrder.amount}
                 </span>
@@ -874,7 +923,9 @@ const PrintOrderManagement = () => {
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-6">
               <p className="text-xs text-amber-800 dark:text-amber-400 flex items-start">
                 <i className="fas fa-info-circle mt-0.5 mr-2"></i>
-                <span>Please verify the payment in your UPI app before confirming</span>
+                <span>
+                  Please verify the payment in your UPI app before confirming
+                </span>
               </p>
             </div>
 
