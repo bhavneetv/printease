@@ -102,12 +102,12 @@ if ($action === "print") {
         exit;
     }
 
-    $update = $conn->prepare(
-        "UPDATE orders 
-         SET status = 'printing'
-         WHERE order_code = ?"
-    );
-    $update->bind_param("s", $order_id);
+    // $update = $conn->prepare(
+    //     "UPDATE orders 
+    //      SET status = 'printing'
+    //      WHERE order_code = ?"
+    // );
+    // $update->bind_param("s", $order_id);
 
     if ($update->execute()) {
         echo json_encode([
