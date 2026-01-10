@@ -177,6 +177,28 @@ const ShopDashboard = () => {
     
   };
 
+useEffect(() => {
+    // 1. Request permission and get token
+    requestPermission();
+
+    // 2. Listen for messages when app is in foreground
+    const unsubscribe = onMessageListener().then((payload) => {
+      setNotification({
+        title: payload.notification.title,
+        body: payload.notification.body,
+      });
+      
+      // Optional: Show a toast
+      toast(`${payload.notification.title}: ${payload.notification.body}`);
+      console.log('Foreground message received:', payload);
+    });
+
+    return () => {
+      // Cleanup if necessary
+      unsubscribe.catch((err) => console.log('failed: ', err));
+    };
+  }, []);
+
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
       <style>{`

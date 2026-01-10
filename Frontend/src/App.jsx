@@ -12,12 +12,19 @@ import { OrderDetailsPage } from "./Pages/Shop/OrderDetailsPage.jsx";
 import ShopOrders from "./Pages/Shop/ShopOrder.jsx";
 import PrintOrders from "./Pages/Shop/PrintOrders.jsx";
 import ShopProfile from "./Pages/Shop/ShopProfile.jsx";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+import { Toaster } from "react-hot-toast";
+=======
+>>>>>>> 9ea7287b694333ca94547853c977315cf122dfd1
+>>>>>>> d8fadf7 (push notifcation)
 
 function App() {
   // How login credentials are sent From the server
 
   // Login Test
- 
+
 
   const router = createBrowserRouter([
     {
@@ -76,6 +83,7 @@ function App() {
 
   return (
     <>
+    <Toaster/>
       <RouterProvider router={router} />
     </>
   );

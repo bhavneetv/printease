@@ -426,8 +426,9 @@ const ShopOrders = () => {
                       </td>
                       <td className="px-6 py-4">
                         <button
+                        disabled={order.status === 'completed'}
                           onClick={() => openOrderDetails(order)}
-                          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-2"
+                          className={`px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-2 ${order.status === 'completed' ? 'opacity-50 cursor-not-allowed hover:bg-purple-600' : ''}`}
                         >
                           <i className="fas fa-eye"></i>
                           View

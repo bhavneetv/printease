@@ -484,8 +484,9 @@ const ProfileSettings = () => {
             </div>
             <div className="p-4 md:p-6 space-y-4">
               <button
+              disabled={handelPasshide}
                 onClick={() => setShowPasswordModal(true)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition"
+                className={`w-full flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition ${handelPasshide ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span>
                   <i className="fas fa-key mr-2"></i>Change Password
