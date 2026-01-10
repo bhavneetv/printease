@@ -101,6 +101,7 @@ const saveTokenToBackend = async (token) => {
   try {
     const user_idt = isLoggedIn("user"); 
     console.log(user_idt)
+    console.log(token)
     
     await fetch(import.meta.env.VITE_API + "api/save_token.php", {
       method: "POST",
