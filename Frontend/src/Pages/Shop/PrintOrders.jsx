@@ -159,102 +159,52 @@ const PrintOrderManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleDownload = async () => {
-    try {
-      setIsDownloading(true);
+  const handleDownload = () => {
+    const fileUrl = `${API}backend/shop/file-stream.php?order_id=${selectedOrder.id}&mode=download`;
 
-      const res = await fetch(`${API}api/shop/getOrderFile.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_id: selectedOrder.id,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        alert(data.message);
-        return;
-      }
-
-      const a = document.createElement("a");
-      a.href = data.file_url;
-      a.download = "";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      console.log("Downloading:", data.file_url);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsDownloading(false);
-    }
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
-  const handlePrintNow = async () => {
-    try {
-      setIsPrinting(true);
+const handlePrintNow = async () => {
+  try {
+    setIsPrinting(true);
 
-      // 1️⃣ Get file path from backend
-      const res = await fetch(`${API}api/shop/getOrderFile.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_id: selectedOrder.id,
-        }),
-      });
+    await fetch(`${API}backend/shop/payment-comp.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_id: selectedOrder.id,
+        action: "print",
+      }),
+    });
 
-      const data = await res.json();
+    const fileUrl = `${API}backend/shop/file-stream.php?order_id=${selectedOrder.id}&mode=inline`;
 
-      if (!data.success) {
-        alert(data.message);
-        return;
-      }
-
-      await fetch(`${API}backend/shop/payment-comp.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_id: selectedOrder.id,
-          action: "print",
-        }),
-      });
-
-      const isPDF = data.file_url.toLowerCase().endsWith(".pdf");
-
-      if (isPDF) {
-        const printWindow = window.open(
-          data.file_url,
-          "_blank",
-          "width=900,height=700"
-        );
-
-        printWindow.onload = () => {
-          printWindow.focus();
-          printWindow.print();
-        };
-      }
-      // 5️⃣ NOT PDF → DOWNLOAD
-      else {
-        const a = document.createElement("a");
-        a.href = data.file_url;
-        a.download = "";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-
-      fetchOrders();
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong while printing");
-    } finally {
-      setIsPrinting(false);
+    const win = window.open(fileUrl, "_blank");
+    if (!win) {
+      alert("Popup blocked");
+      return;
     }
-  };
+
+    
+    setTimeout(() => {
+      try {
+        win.focus();
+        win.print();
+      } catch {}
+    }, 1500);
+
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setIsPrinting(false);
+  }
+};
 
   const markAsCompleted = async (orderId) => {
     const updatedOrders = orders.map((o) =>
@@ -284,12 +234,7 @@ const PrintOrderManagement = () => {
           >
             <i className="fas fa-spinner fa-spin mr-2"></i>Printing...
           </button>
-          <button
-            onClick={() => markAsCompleted(order.id)}
-            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 shadow-md"
-          >
-            <i className="fas fa-check mr-2"></i>Mark Completed
-          </button>
+      
         </div>
       );
     }

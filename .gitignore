@@ -1,3 +1,4 @@
 Backend/uploads/orders/*
 node_modules/*
 Frontend/.env
+Backend/firebase-service-account.json
