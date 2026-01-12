@@ -85,57 +85,7 @@ const Dashboard = () => {
 
   // --- FIREBASE NOTIFICATION LOGIC ---
 
-const handleNotificationEnable = async () => {
-  const token = await requestPermission();
-  
-  if (token) {
-    setFcmToken(token);
-    toast.success("Notifications Enabled!");
-    
-    // --- ADD THIS: Save token to Backend ---
-    saveTokenToBackend(token); 
-  }
-};
 
-const saveTokenToBackend = async (token) => {
-  try {
-    const user_idt = isLoggedIn("user"); 
-    console.log(user_idt)
-    console.log(token)
-    
-    await fetch(import.meta.env.VITE_API + "api/save_token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user_idt,
-        fcm_token: token
-      }),
-    });
-    console.log("Token saved to database");
-  } catch (err) {
-    console.error("Failed to save token:", err);
-  }
-};
-
-  // 3. Listen for incoming messages while the app is open
-  useEffect(() => {
-    const unsubscribe = onMessageListener().then((payload) => {
-      if (payload) {
-        console.log('Foreground message received:', payload);
-        toast((t) => (
-          <span>
-            <b>{payload.notification.title}</b>
-            <br />
-            {payload.notification.body}
-          </span>
-        ));
-      }
-    });
-
-    return () => {
-      // unsubscribe.catch((err) => console.log('failed: ', err));
-    };
-  }, []);
 
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -158,14 +108,14 @@ const saveTokenToBackend = async (token) => {
         </div>
 
         {/* 5. ADDED: Button to Enable Notifications */}
-        {!fcmToken && (
+        {/* {!fcmToken && (
              <button
              onClick={handleNotificationEnable}
              className="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2"
            >
              <i className="fas fa-bell"></i> Enable Notifications
            </button>
-        )}
+        )} */}
       </div>
 
       {/* Stats Cards */}
