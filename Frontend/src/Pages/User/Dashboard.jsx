@@ -103,7 +103,7 @@ const saveTokenToBackend = async (token) => {
     console.log(user_idt)
     console.log(token)
     
-    await fetch(import.meta.env.VITE_API + "api/save_token.php", {
+    await fetch(API + "notification/token.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
