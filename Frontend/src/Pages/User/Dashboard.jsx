@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { isLoggedIn } from "../../assets/auth";
-import { requestPermission, onMessageListener } from '../../firebase.js';
-import toast, { Toaster } from 'react-hot-toast';
+import { requestPermission, onMessageListener } from "../../firebase.js";
+import toast, { Toaster } from "react-hot-toast";
 
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -76,9 +76,12 @@ const Dashboard = () => {
 
   const getStatusClass = (status) => {
     const classes = {
-      completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      processing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      completed:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      processing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
     };
     return classes[status] || "";
   };
@@ -86,32 +89,50 @@ const Dashboard = () => {
   // --- FIREBASE NOTIFICATION LOGIC ---
 
 
-<<<<<<< HEAD
-const saveTokenToBackend = async (token) => {
-  try {
-    const user_idt = isLoggedIn("user"); 
-    console.log(user_idt)
-    console.log(token)
-    
-    await fetch(API + "notification/token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user_idt,
-        fcm_token: token
-      }),
-    });
-    console.log("Token saved to database");
-  } catch (err) {
-    console.error("Failed to save token:", err);
-  }
-};
+  const checkTokenExists = async (user_idt) => {
+    try {
+      const response = await fetch(API + "backend/send-not.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user_idt,
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (err) {
+      console.error("Failed to check token:", err);
+      return false;
+    }
+  };
+
+  checkTokenExists(5)
+  const saveTokenToBackend = async (token) => {
+    try {
+      const user_idt = isLoggedIn("user");
+      console.log(user_idt);
+      console.log(token);
+
+      await fetch(API + "notification/token.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user_idt,
+          fcm_token: token,
+        }),
+      });
+      console.log("Token saved to database");
+    } catch (err) {
+      console.error("Failed to save token:", err);
+    }
+  };
 
   // 3. Listen for incoming messages while the app is open
   useEffect(() => {
     const unsubscribe = onMessageListener().then((payload) => {
       if (payload) {
-        console.log('Foreground message received:', payload);
+        console.log("Foreground message received:", payload);
         toast((t) => (
           <span>
             <b>{payload.notification.title}</b>
@@ -126,14 +147,12 @@ const saveTokenToBackend = async (token) => {
       // unsubscribe.catch((err) => console.log('failed: ', err));
     };
   }, []);
-=======
->>>>>>> d0c8672484afdd9c28019ed5bf53bb0cc2baf7d3
 
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
       {/* 4. Add Toaster here so notifications can be seen */}
       <Toaster position="top-right" />
-      
+
       <style>{`
         .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
       `}</style>
@@ -203,11 +222,11 @@ const saveTokenToBackend = async (token) => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-{/* <<<<<<< HEAD */}
+            {/* <<<<<<< HEAD */}
             {loading ? "..." : `₹${lenght?.total_spent.toLocaleString()}`}
-{/* ======= */}
+            {/* ======= */}
             {loading ? "..." : `₹${lenght?.total_spent?.toLocaleString()}`}
- d8fadf7 (push notifcation)
+            d8fadf7 (push notifcation)
           </p>
         </div>
 
@@ -238,7 +257,9 @@ const saveTokenToBackend = async (token) => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading orders...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Loading orders...
+            </p>
           </div>
         ) : orders.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -250,9 +271,13 @@ const saveTokenToBackend = async (token) => {
               <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                   <th className="px-4 md:px-6 py-3">Order ID</th>
-                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">Document</th>
+                  <th className="px-4 md:px-6 py-3 hidden sm:table-cell">
+                    Document
+                  </th>
                   <th className="px-4 md:px-6 py-3">Pages</th>
-                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">Amount</th>
+                  <th className="px-4 md:px-6 py-3 hidden md:table-cell">
+                    Amount
+                  </th>
                   <th className="px-4 md:px-6 py-3">Status</th>
                 </tr>
               </thead>
@@ -276,7 +301,9 @@ const saveTokenToBackend = async (token) => {
                     </td>
                     <td className="px-4 md:px-6 py-4">
                       <span
-                        className={`${getStatusClass(order.status)} text-xs px-2.5 text-yellow-600 py-1 rounded-full font-medium capitalize`}
+                        className={`${getStatusClass(
+                          order.status
+                        )} text-xs px-2.5 text-yellow-600 py-1 rounded-full font-medium capitalize`}
                       >
                         {order.status}
                       </span>

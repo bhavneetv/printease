@@ -2,7 +2,7 @@
 include "config/conn.php";
 
 define('FIREBASE_PROJECT_ID', 'unicart-35704');
-define('FIREBASE_KEY_FILE', __DIR__ . '/firebase_service_account.json');
+define('FIREBASE_KEY_FILE', __DIR__ . '/service-acc.json');
 
 function sendFCMNotification($user_id, $title, $message)
 {
