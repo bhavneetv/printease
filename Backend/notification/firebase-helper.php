@@ -1,8 +1,8 @@
 <?php
-include "config/conn.php";
+include "../config/conn.php";
 
 define('FIREBASE_PROJECT_ID', 'unicart-35704');
-define('FIREBASE_KEY_FILE', __DIR__ . '/service-acc.json');
+define('FIREBASE_KEY_FILE', __DIR__ . '/tokens.json');
 
 function sendFCMNotification($user_id, $title, $message)
 {
@@ -109,7 +109,7 @@ function curlJson($url, $data, $token)
 
     $res = curl_exec($ch);
     curl_close($ch);
-    return json_decode($res, true);
+    // return json_decode($res, true);
 }
 
 function base64url_encode($data)

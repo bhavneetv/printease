@@ -6,3 +6,8 @@ Backend/notification/service-acc.json
 Frontend/.env
 # Ignore all environment files
 env*
+Backend/notification/service-acc.json
+
+Backend/notification/unicart-35704-firebase-adminsdk-fbsvc-27853c6e59.json
+Backend/notification/service-acc.json
+Backend/notification/tokens.json

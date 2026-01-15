@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 include "../config/conn.php";
+include "../notification/firebase-helper.php";
 
 if (!isset($_FILES['file'])) {
     echo json_encode(["success" => false, "message" => "No file uploaded"]);
@@ -68,7 +69,6 @@ if ($cod == 1 && $payment_type == "cash") {
         "message" => "Cash on Delivery is not available for this shop. Please choose UPI payment."
     ]);
     exit;
-    
 }
 
 
@@ -91,6 +91,13 @@ $sql = "INSERT INTO orders (
 )";
 
 if (mysqli_query($conn, $sql)) {
+    sendFCMNotification(
+        $shop_id,
+        "shop",
+        "New Order Received",
+        "You have received a new order of $total_pages pages with $copies copies"
+    );
+
     echo json_encode([
         "success" => true,
         "order_id" => mysqli_insert_id($conn)

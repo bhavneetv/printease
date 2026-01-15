@@ -119,7 +119,7 @@ export default function PrintUpload() {
       });
 
       const data = await response.json();
-      // console.log("Order submission response:", data);
+      console.log("Order submission response:", data);
 
       if (data.success) {
         alert("Order Successful! Order ID: " + data.order_id);
