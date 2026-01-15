@@ -86,7 +86,6 @@ const Dashboard = () => {
   // --- FIREBASE NOTIFICATION LOGIC ---
 
 
-<<<<<<< HEAD
 const saveTokenToBackend = async (token) => {
   try {
     const user_idt = isLoggedIn("user"); 
@@ -126,8 +125,6 @@ const saveTokenToBackend = async (token) => {
       // unsubscribe.catch((err) => console.log('failed: ', err));
     };
   }, []);
-=======
->>>>>>> d0c8672484afdd9c28019ed5bf53bb0cc2baf7d3
 
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
