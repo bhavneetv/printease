@@ -88,27 +88,44 @@ const Dashboard = () => {
 
   // --- FIREBASE NOTIFICATION LOGIC ---
 
+  const checkTokenExists = async (user_idt) => {
+    try {
+      const response = await fetch(API + "backend/send-not.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user_idt,
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (err) {
+      console.error("Failed to check token:", err);
+      return false;
+    }
+  };
 
-// <<<<<<< HEAD
-const saveTokenToBackend = async (token) => {
-  try {
-    const user_idt = isLoggedIn("user"); 
-    console.log(user_idt)
-    console.log(token)
-    
-    await fetch(API + "notification/token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user_idt,
-        fcm_token: token
-      }),
-    });
-    console.log("Token saved to database");
-  } catch (err) {
-    console.error("Failed to save token:", err);
-  }
-};
+  checkTokenExists(5);
+  const saveTokenToBackend = async (token) => {
+    try {
+      const user_idt = isLoggedIn("user");
+      console.log(user_idt);
+      console.log(token);
+
+      await fetch(API + "notification/token.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user_idt,
+          fcm_token: token,
+        }),
+      });
+      console.log("Token saved to database");
+    } catch (err) {
+      console.error("Failed to save token:", err);
+    }
+  };
 
   // 3. Listen for incoming messages while the app is open
   useEffect(() => {
