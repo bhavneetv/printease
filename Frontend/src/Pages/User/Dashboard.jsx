@@ -89,7 +89,7 @@ const Dashboard = () => {
   // --- FIREBASE NOTIFICATION LOGIC ---
 
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
 const saveTokenToBackend = async (token) => {
   try {
     const user_idt = isLoggedIn("user"); 
