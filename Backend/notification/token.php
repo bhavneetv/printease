@@ -18,7 +18,7 @@ if (!$user_id || !$fcm_token) {
 
 $sql = "INSERT INTO users_fcm_tokens (user_id, fcm_token)
         VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE fcm_token = VALUES(fcm_token)";
+        ON DUPLICATE KEY UPDATE fcm_token = VALUES(fcm_token), updated_at = NOW()";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("is", $user_id, $fcm_token);
