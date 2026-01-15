@@ -22,7 +22,7 @@ export const isLoggedIn = (pageRole = null) => {
   return userData.id;
 };
 
-const logout = () => {
+export const logout = () => {
   sessionStorage.clear();
   window.location.replace("/login");
 };
