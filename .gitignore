@@ -3,3 +3,6 @@ node_modules/*
 Frontend/.env
 Backend/notification/firebase-service-account.json
 Backend/notification/service-acc.json
+Frontend/.env
+# Ignore all environment files
+env*

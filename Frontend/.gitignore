@@ -27,7 +27,6 @@ dist-ssr
 
 node_modules/*
 
-<<<<<<< HEAD
-.env
-=======
->>>>>>> d8fadf7 (push notifcation)
+# Ignore environment files  
+env*
+

@@ -20,9 +20,8 @@ const Dashboard = () => {
   const [fcmToken, setFcmToken] = useState(null);
 
   const API = import.meta.env.VITE_API;
-
   if (!isLoggedIn("user")) {
-    window.location.href = "/login";
+    window.location.href = "/";
   }
   const user_idt = isLoggedIn("user");
   const username = sessionStorage.getItem("user");
