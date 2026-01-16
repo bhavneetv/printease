@@ -96,7 +96,9 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   // 1. Check if token exists on Mount
   useEffect(() => {
     const performCheck = async () => {
-      const user_idt = isLoggedIn("user");
+      const user_idt = returnID();
+      
+      
       if (user_idt) {
         await checkTokenExists(user_idt);
       }
@@ -105,6 +107,18 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
     performCheck();
   }, []);
 
+  const returnID = ()=>{
+     const user = sessionStorage.getItem("user");
+     if (user) {
+      try {
+        const userData = JSON.parse(atob(user));
+        return userData.id;
+      } catch (e) {
+        return null;
+      }
+     }
+     return null;
+  }
   const checkTokenExists = async (user_idt) => {
     try {
       // Using VITE_API for consistency
@@ -115,6 +129,7 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
           user_id: user_idt,
         }),
       });
+      
       
       const data = await response.json();
       // Logic: If data is 1 (or contains 1), set true. Else false.
