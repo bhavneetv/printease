@@ -9,7 +9,7 @@ if (!isset($_FILES['file'])) {
 }
 
 $user_id       = $_POST['user_id'];
-$shop_id       = $_POST['shop_id'];
+$shop_id       = (int)($_POST['shop_id']);
 $payment_type  = $_POST['payment_type'];
 $orderCode  =    $_POST['order_id'];
 
@@ -90,6 +90,7 @@ $sql = "INSERT INTO orders (
     '$payment_type', 'pending', 'placed' , '$orderCode'
 )";
 
+echo $shop_id;
 if (mysqli_query($conn, $sql)) {
     sendFCMNotification(
         $shop_id,
