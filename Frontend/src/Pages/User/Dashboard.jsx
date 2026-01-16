@@ -6,6 +6,7 @@ import toast, { Toaster } from "react-hot-toast";
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("User"); // Store name in state
   const [stats, setStats] = useState({
     totalOrders: 0,
     pagesPrinted: 0,
@@ -16,37 +17,54 @@ const Dashboard = () => {
     pagesGrowth: 0,
   });
 
-  // 1. Add state to store the token if needed
-  const [fcmToken, setFcmToken] = useState(null);
-
+  const [lenght, setlenght] = useState();
   const API = import.meta.env.VITE_API;
-  if (!isLoggedIn("user")) {
-    window.location.href = "/";
-  }
-  const user_idt = isLoggedIn("user");
-  const username = sessionStorage.getItem("user");
-  const name = JSON.parse(atob(username)).name;
+
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
+    const user_idt = isLoggedIn("user");
+
+    if (!user_idt) {
+      setAuthChecked(true);
+      return;
+    }
+
+    const sessionUser = sessionStorage.getItem("user");
+    if (sessionUser) {
+      try {
+        const parsedData = JSON.parse(atob(sessionUser));
+        setUserName(parsedData.name);
+      } catch (e) {
+        console.error("User parse error", e);
+      }
+    }
+
+    fetchOrders(user_idt);
+    checkTokenExists(user_idt);
+
+    setAuthChecked(true);
   }, []);
 
-  const [lenght, setlenght] = useState();
 
-  const fetchOrders = async () => {
+  // --- 2. FETCH ORDERS (Modified to accept ID) ---
+  const fetchOrders = async (activeUserId) => {
+    if (!activeUserId) return; // Safety check
+
     try {
       setLoading(true);
       const response = await fetch(API + "api/dashboard.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user_idt }),
+        body: JSON.stringify({ user_id: activeUserId }),
       });
 
       const data = await response.json();
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Optional: Remove artificial delay for production
+      // await new Promise((resolve) => setTimeout(resolve, 500));
 
       setlenght(data.cards);
-      setOrders(data.recent_activity);
+      setOrders(data.recent_activity || []); // Fallback to empty array
       calculateStats(data.cards);
       setLoading(false);
     } catch (error) {
@@ -56,6 +74,7 @@ const Dashboard = () => {
   };
 
   const calculateStats = (ordersData) => {
+    if (!ordersData) return; // Safety check
     const totalOrders = ordersData.total_Orders || 0;
     const pagesPrinted = ordersData.pages || 0;
     const totalSpent = ordersData.total_spent || 0;
@@ -85,15 +104,14 @@ const Dashboard = () => {
     return classes[status] || "";
   };
 
-  // --- FIREBASE NOTIFICATION LOGIC ---
-
-  const checkTokenExists = async (user_idt) => {
+  // --- 3. TOKEN LOGIC (Fixed Infinite Loop) ---
+  const checkTokenExists = async (userId) => {
     try {
       const response = await fetch(API + "backend/send-not.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: user_idt,
+          user_id: userId,
         }),
       });
       const data = await response.json();
@@ -105,13 +123,10 @@ const Dashboard = () => {
     }
   };
 
-  checkTokenExists(5);
+  // Note: This function isn't called, but it's safe here
   const saveTokenToBackend = async (token) => {
+    const user_idt = isLoggedIn("user");
     try {
-      const user_idt = isLoggedIn("user");
-      console.log(user_idt);
-      console.log(token);
-
       await fetch(API + "notification/token.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,9 +141,9 @@ const Dashboard = () => {
     }
   };
 
-  // 3. Listen for incoming messages while the app is open
+  // --- 4. FIREBASE LISTENER ---
   useEffect(() => {
-    const unsubscribe = onMessageListener().then((payload) => {
+    onMessageListener().then((payload) => {
       if (payload) {
         console.log("Foreground message received:", payload);
         toast((t) => (
@@ -139,16 +154,11 @@ const Dashboard = () => {
           </span>
         ));
       }
-    });
-
-    return () => {
-      // unsubscribe.catch((err) => console.log('failed: ', err));
-    };
+    }).catch(err => console.log('failed: ', err));
   }, []);
 
   return (
     <main className="p-3 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-      {/* 4. Add Toaster here so notifications can be seen */}
       <Toaster position="top-right" />
 
       <style>{`
@@ -159,22 +169,12 @@ const Dashboard = () => {
       <div className="mb-6 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1">
-            Welcome, {name} 👋
+            Welcome, {userName} 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
             Here's what's happening with your print orders today
           </p>
         </div>
-
-        {/* 5. ADDED: Button to Enable Notifications */}
-        {/* {!fcmToken && (
-             <button
-             onClick={handleNotificationEnable}
-             className="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2"
-           >
-             <i className="fas fa-bell"></i> Enable Notifications
-           </button>
-        )} */}
       </div>
 
       {/* Stats Cards */}
@@ -220,11 +220,7 @@ const Dashboard = () => {
             Total Spent
           </h3>
           <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-            {/* <<<<<<< HEAD */}
-            {loading ? "..." : `₹${lenght?.total_spent.toLocaleString()}`}
-            {/* ======= */}
             {loading ? "..." : `₹${lenght?.total_spent?.toLocaleString()}`}
-            d8fadf7 (push notifcation)
           </p>
         </div>
 
