@@ -28,6 +28,7 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   const [notifications, setNotifications] = useState([]);
   const menuRef = useRef(null);
   const notificationRef = useRef(null);
+  const [showNotifi, setshowNotifi] = useState(false)
   
   // State to track if token exists in backend (0 = no, 1 = yes)
   const [hasToken, setHasToken] = useState(false);
@@ -110,8 +111,9 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   const returnID = ()=>{
      const user = sessionStorage.getItem("user");
      if (user) {
-      try {
-        const userData = JSON.parse(atob(user));
+       try {
+         const userData = JSON.parse(atob(user));
+         setshowNotifi(true)
         return userData.id;
       } catch (e) {
         return null;
@@ -238,7 +240,9 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
             </div>
 
             {/* NOTIFICATION BUTTON LOGIC */}
-            <div>
+    {
+      showNotifi ?
+              <div>
               {!loadingTokenCheck && (
                 <>
                   {!hasToken ? (
@@ -261,6 +265,9 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                 </>
               )}
             </div>
+            :
+            ""
+    }
 
             <div className="flex items-center space-x-4">
               <button

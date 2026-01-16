@@ -179,7 +179,7 @@ const ShopDashboard = () => {
 
 useEffect(() => {
     // 1. Request permission and get token
-    requestPermission();
+    // requestPermission();
 
     // 2. Listen for messages when app is in foreground
     const unsubscribe = onMessageListener().then((payload) => {
