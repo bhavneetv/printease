@@ -1,5 +1,7 @@
 <?php
-include "../config/conn.php";
+
+require_once __DIR__ . "/../config/conn.php";
+
 
 define('FIREBASE_PROJECT_ID', 'unicart-35704');
 define('FIREBASE_KEY_FILE', __DIR__ . '/tokens.json');
