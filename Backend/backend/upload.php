@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 include "../config/conn.php";
-include "../notification/firebase-helper.php";
+require_once __DIR__ . "/../notification/firebase-helper.php";
 
 if (!isset($_FILES['file'])) {
     echo json_encode(["success" => false, "message" => "No file uploaded"]);
@@ -56,7 +56,7 @@ $fileSize = $_FILES["file"]["size"];
 
 // $orderCode = generate_random_number();
 
-$sql  = "SELECT cod FROM shops WHERE shop_id = '$shop_id'";
+$sql  = "SELECT cod FROM shops WHERE user_id = '$shop_id'";
 $res  = mysqli_query($conn, $sql);
 $row  = mysqli_fetch_assoc($res);
 $cod  = $row['cod'];
@@ -90,18 +90,17 @@ $sql = "INSERT INTO orders (
     '$payment_type', 'pending', 'placed' , '$orderCode'
 )";
 
-echo $shop_id;
+// echo $shop_id;
 if (mysqli_query($conn, $sql)) {
     sendFCMNotification(
         $shop_id,
-        "shop",
         "New Order Received",
         "You have received a new order of $total_pages pages with $copies copies"
     );
 
     echo json_encode([
         "success" => true,
-        "order_id" => mysqli_insert_id($conn)
+        "order_id" => $orderCode
     ]);
 } else {
     echo json_encode([

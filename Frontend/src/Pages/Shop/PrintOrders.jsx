@@ -108,7 +108,7 @@ const PrintOrderManagement = () => {
     setIsCollecting(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    await fetch(`${API}backend/shop/payment-comp.php`, {
+  const re  =  await fetch(`${API}backend/shop/payment-comp.php`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -119,6 +119,8 @@ const PrintOrderManagement = () => {
         action: "pay",
       }),
     });
+    const sd = await re.text();
+    console.log(sd);
     fetchOrders();
 
     setIsCollecting(false);
