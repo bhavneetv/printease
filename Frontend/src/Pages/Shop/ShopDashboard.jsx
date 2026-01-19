@@ -42,37 +42,37 @@ const ShopDashboard = () => {
   // --- 3. NOTIFICATION LOGIC START ---
 
   // Function to handle the "Enable Notifications" button click
-  const handleNotificationEnable = async () => {
-    const token = await requestPermission();
-    if (token) {
-      setFcmToken(token);
-      toast.success("Shop Notifications Enabled!");
-      console.log("Shop Token:", token);
-      saveTokenToBackend(token);
-    } else {
-      toast.error("Permission denied or failed.");
-    }
-  };
+  // const handleNotificationEnable = async () => {
+  //   const token = await requestPermission();
+  //   if (token) {
+  //     setFcmToken(token);
+  //     toast.success("Shop Notifications Enabled!");
+  //     console.log("Shop Token:", token);
+  //     saveTokenToBackend(token);
+  //   } else {
+  //     toast.error("Permission denied or failed.");
+  //   }
+  // };
 
-  // Function to save token to database (Targeting shopkeeper table if needed)
-  const saveTokenToBackend = async (token) => {
-    try {
-      // Note: Ensure your backend handles 'user_id' correctly for shopkeepers
-      // or create a separate api/shop/save_token.php if tables differ significantly.
-      await fetch(API + "api/save_token.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user_id, // This is the shopkeeper's ID
-          fcm_token: token,
-          role: "shopkeeper" // Optional: Send role if your PHP needs it to distinguish tables
-        }),
-      });
-      console.log("Shop Token saved to database");
-    } catch (err) {
-      console.error("Failed to save shop token:", err);
-    }
-  };
+  // // Function to save token to database (Targeting shopkeeper table if needed)
+  // const saveTokenToBackend = async (token) => {
+  //   try {
+  //     // Note: Ensure your backend handles 'user_id' correctly for shopkeepers
+  //     // or create a separate api/shop/save_token.php if tables differ significantly.
+  //     await fetch(API + "api/save_token.php", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         user_id: user_id, // This is the shopkeeper's ID
+  //         fcm_token: token,
+  //         role: "shopkeeper" // Optional: Send role if your PHP needs it to distinguish tables
+  //       }),
+  //     });
+  //     console.log("Shop Token saved to database");
+  //   } catch (err) {
+  //     console.error("Failed to save shop token:", err);
+  //   }
+  // };
 
   // Listen for foreground messages
   useEffect(() => {
@@ -208,14 +208,14 @@ const ShopDashboard = () => {
         
         <div className="mt-4 md:mt-0 flex items-center gap-4 flex-wrap">
           {/* 5. Enable Notifications Button */}
-          {!fcmToken && (
+          {/* {!fcmToken && (
              <button
              onClick={handleNotificationEnable}
              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2"
            >
              <i className="fas fa-bell"></i> Enable Alerts
            </button>
-          )}
+          )} */}
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">
