@@ -14,6 +14,7 @@ import PrintOrders from "./Pages/Shop/PrintOrders.jsx";
 import ShopProfile from "./Pages/Shop/ShopProfile.jsx";
 
 import { Toaster } from "react-hot-toast";
+import AdminDashboard from "./Pages/Admin/AdminDashboard.jsx";
 
 
 function App() {
@@ -38,6 +39,10 @@ function App() {
         {
           path: "/Myorders",
           element: <Myorders />,
+        },
+        {
+          path: "/AdminDashboard",
+          element: <AdminDashboard />,
         },
         {
           path: "/ShopOrders",
