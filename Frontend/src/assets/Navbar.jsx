@@ -13,12 +13,8 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaInfoCircle,
-<<<<<<< HEAD
-  FaRedoAlt,
-  FaArrowLeft // Added for mobile search back button
-=======
   FaRedoAlt, // Added for Reset Icon
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
+  FaArrowLeft // Added for mobile search back button
 } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import { Link } from "react-router-dom";
@@ -27,7 +23,6 @@ import toast from "react-hot-toast";
 import { isLoggedIn } from "./auth.jsx";
 
 export default function Navbar({ onToggleTheme, isDark, userName }) {
-  const API = import.meta.env.VITE_API;
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
@@ -35,12 +30,9 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   const menuRef = useRef(null);
   const notificationRef = useRef(null);
   const [showNotifi, setshowNotifi] = useState(false);
-<<<<<<< HEAD
   
   // New state for mobile search toggle
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-=======
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
 
   // State to track if token exists in backend (0 = no, 1 = yes)
   const [hasToken, setHasToken] = useState(false);
@@ -137,10 +129,6 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   useEffect(() => {
     const performCheck = async () => {
       const user_idt = returnID();
-<<<<<<< HEAD
-=======
-
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
       if (user_idt) {
         await checkTokenExists(user_idt);
       }
@@ -154,19 +142,14 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
     if (user) {
       try {
         const userData = JSON.parse(atob(user));
-<<<<<<< HEAD
-        setshowNotifi(true)
-=======
         setshowNotifi(true);
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
         return userData.id;
       } catch (e) {
         return null;
       }
     }
     return null;
-<<<<<<< HEAD
-  }
+  };
 
   const checkTokenExists = async (user_idt) => {
     try {
@@ -177,24 +160,8 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
       });
       
       const data = await response.json();
+      // Logic: If data is 1 (or contains 1), set true. Else false.
       if (data === 1 || data.status === 1 || data === "1") {
-=======
-  };
-  const checkTokenExists = async (id) => {
-    try {
-      console.log("Checking token for user:", id);
-
-      const response = await fetch(API + "backend/send-not.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: id }),
-      });
-
-      const data = await response.json();
-      // console.log(data);
-
-      if (data.status === 1) {
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
         setHasToken(true);
       } else {
         setHasToken(false);
@@ -207,8 +174,8 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
 
   const saveTokenToBackend = async (token) => {
     try {
-<<<<<<< HEAD
       const user_idt = isLoggedIn("user");
+      
       await fetch(import.meta.env.VITE_API + "api/save_token.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,29 +185,7 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
         }),
       });
       console.log("Token saved/updated in database");
-=======
-      const user_idt = isLoggedIn();
-      // console.log("User ID:", user_idt);
-      // console.log("Token:", token);
-
-      const response = await fetch(
-        import.meta.env.VITE_API + "notification/token.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: user_idt,
-            fcm_token: token,
-          }),
-        }
-      );
-      // const data = await response.text();
-      // console.log(data);
-
-      console.log("Token saved/updated in database");
-
-      // After saving, update local state so the button flips to 'Reset' (or stays 'Reset')
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
+      
       setHasToken(true);
     } catch (err) {
       console.error("Failed to save token:", err);
@@ -249,24 +194,13 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   };
 
   const handleNotificationAction = async () => {
-<<<<<<< HEAD
     const loadingToast = toast.loading(hasToken ? "Resetting notifications..." : "Enabling notifications...");
-=======
-    const loadingToast = toast.loading(
-      hasToken ? "Resetting notifications..." : "Enabling notifications..."
-    );
-
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
     try {
       const token = await requestPermission();
       if (token) {
         await saveTokenToBackend(token);
         toast.dismiss(loadingToast);
-        toast.success(
-          hasToken
-            ? "Notifications Reset Successfully!"
-            : "Notifications Enabled!"
-        );
+        toast.success(hasToken ? "Notifications Reset Successfully!" : "Notifications Enabled!");
       } else {
         toast.dismiss(loadingToast);
         toast.error("Permission denied or failed to get token.");
@@ -281,10 +215,6 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
   useEffect(() => {
     const unsubscribe = onMessageListener().then((payload) => {
       if (payload) {
-<<<<<<< HEAD
-=======
-        console.log("Foreground message received:", payload);
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
         toast((t) => (
           <span>
             <b>{payload.notification.title}</b>
@@ -328,7 +258,6 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
               />
             </div>
 
-<<<<<<< HEAD
             {/* Mobile Search Icon */}
             <button 
               onClick={() => setMobileSearchOpen(true)}
@@ -412,36 +341,6 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                 </div>
               )}
             </div>
-=======
-            {/* NOTIFICATION BUTTON LOGIC */}
-            {showNotifi ? (
-              <div>
-                {!loadingTokenCheck && (
-                  <>
-                    {!hasToken ? (
-                      // SHOW ENABLE BUTTON (If backend returned 0)
-                      <button
-                        onClick={handleNotificationAction}
-                        className="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2"
-                      >
-                        <FaBell /> Enable Notifications
-                      </button>
-                    ) : (
-                      // SHOW RESET BUTTON (If backend returned 1)
-                      <button
-                        onClick={handleNotificationAction}
-                        className="mt-4 md:mt-0 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2"
-                      >
-                        <FaRedoAlt className="text-xs" /> Reset Notifications
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            ) : (
-              ""
-            )}
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
 
             {/* USER PROFILE DROPDOWN */}
             <div ref={menuRef} className="relative">
@@ -457,136 +356,18 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                 <span className="hidden md:block text-sm font-medium text-red-700 dark:text-gray-300 max-w-[100px] truncate">{userName}</span>
                 <FaChevronDown className={`text-xs text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
               </button>
-<<<<<<< HEAD
               {open && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                   <Link to="/Profile">
                     <div className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-t-lg transition-colors duration-200">
                       <FaUser className="mr-2" /> Profile
-=======
-
-              {/* NOTIFICATIONS BELL */}
-              <div ref={notificationRef} className="relative">
-                <button
-                  onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="relative p-2 text-gray-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-                >
-                  <FaBell className="text-lg" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold animate-pulse">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* DROPDOWN CONTENT (Unchanged) */}
-                {notificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-hidden flex flex-col">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Notifications
-                      </h3>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
-                        >
-                          Mark all as read
-                        </button>
-                      )}
-                    </div>
-                    <div className="overflow-y-auto flex-1">
-                      {notifications.slice(0, 3).map((notif) => (
-                        <div
-                          key={notif.id}
-                          onClick={() => markAsRead(notif.id)}
-                          className={`p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200 ${
-                            !notif.read
-                              ? "bg-purple-50 dark:bg-purple-900/10"
-                              : ""
-                          }`}
-                        >
-                          <div className="flex items-start space-x-3">
-                            <div className="mt-1">
-                              {getNotificationIcon(notif.type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {notif.title}
-                              </p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {notif.message}
-                              </p>
-                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                {notif.time}
-                              </p>
-                            </div>
-                            {!notif.read && (
-                              <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => {
-                          setShowAllNotifications(true);
-                          setNotificationsOpen(false);
-                        }}
-                        className="w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
-                      >
-                        View All Notifications
-                      </button>
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
                     </div>
                   </Link>
                   <div className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer rounded-b-lg transition-colors duration-200">
                     <FaSignOutAlt className="mr-2" /> Logout
                   </div>
-<<<<<<< HEAD
                 </div>
               )}
-=======
-                )}
-              </div>
-
-              {/* USER DROPDOWN (Unchanged) */}
-              <div ref={menuRef} className="relative">
-                <button
-                  onClick={() => setOpen(!open)}
-                  className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-                >
-                  <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      userName
-                    )}&background=667eea&color=fff&bold=true`}
-                    alt={userName}
-                    className="w-9 h-9 rounded-full"
-                  />
-                  <span className="hidden md:block text-sm font-medium text-red-700 dark:text-gray-300">
-                    {userName}
-                  </span>
-                  <FaChevronDown
-                    className={`text-xs text-gray-500 transition-transform duration-200 ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {open && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                    <Link to="/Profile">
-                      <a className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-t-lg transition-colors duration-200">
-                        <FaUser className="mr-2" /> Profile
-                      </a>
-                    </Link>
-                    <a className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer rounded-b-lg transition-colors duration-200">
-                      <FaSignOutAlt className="mr-2" /> Logout
-                    </a>
-                  </div>
-                )}
-              </div>
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
             </div>
           </div>
         </div>
@@ -613,7 +394,7 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
         )}
       </nav>
 
-      {/* ALL NOTIFICATIONS MODAL (Unchanged logic, just added responsiveness classes) */}
+      {/* ALL NOTIFICATIONS MODAL */}
       {showAllNotifications && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[5000] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -654,27 +435,11 @@ export default function Navbar({ onToggleTheme, isDark, userName }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
-<<<<<<< HEAD
                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate pr-2">{notif.title}</p>
                             {!notif.read && <div className="w-2 h-2 bg-purple-600 rounded-full mt-1 ml-2 shrink-0"></div>}
                           </div>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notif.message}</p>
                           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{notif.time}</p>
-=======
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {notif.title}
-                            </p>
-                            {!notif.read && (
-                              <div className="w-2 h-2 bg-purple-600 rounded-full mt-1 ml-2"></div>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {notif.message}
-                          </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                            {notif.time}
-                          </p>
->>>>>>> d59228850511915057ed3931325e2d1159b4c20b
                         </div>
                       </div>
                     </div>
