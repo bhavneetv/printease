@@ -1,38 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { isLoggedIn } from "../../assets/auth";
 
 const ShopProfile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const API = import.meta.env.VITE_API || "http://localhost:8080/";
-  
+  const UserId = isLoggedIn("shopkeeper");
+
   // Shop data state
   const [shopData, setShopData] = useState({
-    shopName: '',
-    description: '',
-    address: '',
-    contactNumber: '',
-    email: '',
-    operatingHours: '',
-    shopStatus: 'open',
-    visibility: 'public',
-    shopImage: '',
-    ownerName: '',
+    shopName: "",
+    description: "",
+    address: "",
+    contactNumber: "",
+    email: "",
+    operatingHours: "",
+    shopStatus: "open",
+    visibility: "public",
+    shopImage: "",
+    ownerName: "",
     totalOrders: 0,
     rating: 0,
     bwPrice: 0,
     colorPrice: 0,
-    upiId: '',
+    upiId: "",
     acceptCash: true,
-    acceptUPI: true
+    acceptUPI: true,
   });
 
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // Fetch shop profile data from backend
@@ -43,14 +45,14 @@ const ShopProfile = () => {
   const fetchShopProfile = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(`${API}api/shop/profile.php`, {
-        method: 'GET',
+      const response = await fetch(`${API}api/shop/fetch-profile.php`, {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          "X-USER-ID": UserId,
         },
-        credentials: 'include', // Include cookies for authentication
       });
 
       if (!response.ok) {
@@ -58,126 +60,127 @@ const ShopProfile = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched shop profile:', data);
+      // console.log(data);
 
-      // Map backend response to state
-      // Adjust these field names based on your actual API response structure
       setShopData({
-        shopName: data.shop_name || data.shopName || '',
-        description: data.description || '',
-        address: data.address || '',
-        contactNumber: data.contact_number || data.contactNumber || '',
-        email: data.email || '',
-        operatingHours: data.operating_hours || data.operatingHours || '',
-        shopStatus: data.shop_status || data.shopStatus || 'open',
-        visibility: data.visibility || 'public',
-        shopImage: data.shop_image || data.shopImage || 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=400&fit=crop',
-        ownerName: data.owner_name || data.ownerName || '',
-        totalOrders: data.total_orders || data.totalOrders || 0,
+        shopName: data.shop_name || "",
+        description: data.description || "",
+        address: data.address || "",
+        contactNumber: data.contact_number || "",
+        email: data.email || "",
+        operatingHours: data.operating_hours || "",
+        shopStatus: data.shop_status == 1 ? "open" : "closed",
+        visibility: data.visibility || "public",
+        shopImage:
+          data.shop_image ||
+          "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=400&fit=crop",
+        ownerName: data.owner_name || "",
+        totalOrders: data.total_orders || 0,
         rating: data.rating || 0,
-        bwPrice: parseFloat(data.bw_price || data.bwPrice || 0),
-        colorPrice: parseFloat(data.color_price || data.colorPrice || 0),
-        upiId: data.upi_id || data.upiId || '',
-        acceptCash: data.accept_cash !== undefined ? data.accept_cash : (data.acceptCash !== undefined ? data.acceptCash : true),
-        acceptUPI: data.accept_upi !== undefined ? data.accept_upi : (data.acceptUPI !== undefined ? data.acceptUPI : true)
+        bwPrice: parseFloat(data.bw_price || 0),
+        colorPrice: parseFloat(data.color_price || 0),
+        upiId: data.upi_id || "",
+        acceptCash: data.accept_cash ?? true,
+        acceptUPI: data.accept_upi ?? true,
       });
-
+      // console.log(data);
     } catch (error) {
-      console.error('Failed to fetch shop profile:', error);
-      setError('Failed to load shop profile. Using default values.');
-      
-      // Set default/fallback data
-      setShopData({
-        shopName: 'PrintEase Corner',
-        description: 'Your trusted neighborhood print shop offering high-quality printing services at affordable rates.',
-        address: '123 Main Street, Downtown, City - 110001',
-        contactNumber: '+91 98765 43210',
-        email: 'shop@printease.com',
-        operatingHours: '9:00 AM - 9:00 PM',
-        shopStatus: 'open',
-        visibility: 'public',
-        shopImage: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=400&fit=crop',
-        ownerName: 'Rajesh Kumar',
-        totalOrders: 1247,
-        rating: 4.8,
-        bwPrice: 2,
-        colorPrice: 8,
-        upiId: 'printease@paytm',
-        acceptCash: true,
-        acceptUPI: true
-      });
+      console.error(error);
+      setError("Failed to load shop profile");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setShopData(prev => ({ ...prev, [field]: value }));
+    setShopData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePasswordChange = (field, value) => {
-    setPasswordData(prev => ({ ...prev, [field]: value }));
+    setPasswordData((prev) => ({ ...prev, [field]: value }));
   };
-
   const handleSaveChanges = async () => {
+
+    const text = "This will update your shop profile and location. Are you sure?"
+    const confirm = window.confirm(text);
+    if (!confirm) return;
     setIsSaving(true);
     setError(null);
     setIsSuccess(false);
 
     try {
-      // Prepare data to send to backend
-      // Convert to snake_case for PHP backend (adjust based on your API expectations)
+      // 📍 Get user location
+      const getLocation = () =>
+        new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error("Geolocation not supported"));
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              });
+            },
+            () => reject(new Error("Location permission denied")),
+            { enableHighAccuracy: true, timeout: 10000 },
+          );
+        });
+
+      let latitude = null;
+      let longitude = null;
+
+      try {
+        const location = await getLocation();
+        latitude = location.latitude;
+        longitude = location.longitude;
+      } catch (err) {
+        console.warn("Location not updated:", err.message);
+        // Optional: allow profile update even if location fails
+      }
+
+      // 📦 Data to backend (profile + location)
       const dataToSend = {
         shop_name: shopData.shopName,
-        description: shopData.description,
         address: shopData.address,
-        contact_number: shopData.contactNumber,
-        email: shopData.email,
-        operating_hours: shopData.operatingHours,
         shop_status: shopData.shopStatus,
-        visibility: shopData.visibility,
         shop_image: shopData.shopImage,
         owner_name: shopData.ownerName,
+        email: shopData.email,
+        contact_number: shopData.contactNumber,
         bw_price: shopData.bwPrice,
         color_price: shopData.colorPrice,
         upi_id: shopData.upiId,
         accept_cash: shopData.acceptCash,
-        accept_upi: shopData.acceptUPI
+        accept_upi: shopData.acceptUPI,
+
+        // 📍 NEW FIELDS
+        latitude,
+        longitude,
       };
 
-      console.log('Sending data to backend:', dataToSend);
-
-      const response = await fetch(`${API}api/shop/profile-update.php`, {
-        method: 'POST',
+      const response = await fetch(`${API}api/shop/update-profile.php`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          "X-USER-ID": UserId,
         },
-        credentials: 'include',
-        body: JSON.stringify(dataToSend)
+        body: JSON.stringify(dataToSend),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
-      console.log('Save response:', result);
+      // console.log(result);
 
-      if (result.success || result.status === 'success') {
-        setIsSuccess(true);
-        setTimeout(() => setIsSuccess(false), 3000);
-        
-        // Optionally refresh data from backend
-        // await fetchShopProfile();
-      } else {
-        throw new Error(result.message || 'Failed to save changes');
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Update failed");
       }
 
+      setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 3000);
     } catch (error) {
-      console.error('Failed to save changes:', error);
-      setError(error.message || 'Failed to save changes. Please try again.');
-      
-      // Show error for 5 seconds
+      console.error(error);
+      setError(error.message || "Failed to save changes");
       setTimeout(() => setError(null), 5000);
     } finally {
       setIsSaving(false);
@@ -186,13 +189,13 @@ const ShopProfile = () => {
 
   const handlePasswordUpdate = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Passwords do not match!');
+      setError("Passwords do not match!");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long!');
+      setError("Password must be at least 6 characters long!");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -202,32 +205,36 @@ const ShopProfile = () => {
 
     try {
       const response = await fetch(`${API}api/shop/update-password.php`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          "X-USER-ID": UserId,
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({
           current_password: passwordData.currentPassword,
           new_password: passwordData.newPassword,
-          confirm_password: passwordData.confirmPassword
-        })
+          confirm_password: passwordData.confirmPassword,
+        }),
       });
 
       const result = await response.json();
-      console.log('Password update response:', result);
+      console.log("Password update response:", result);
 
-      if (result.success || result.status === 'success') {
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      if (result.success || result.status === "success") {
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
         setIsSuccess(true);
         setTimeout(() => setIsSuccess(false), 3000);
       } else {
-        throw new Error(result.message || 'Failed to update password');
+        throw new Error(result.message || "Failed to update password");
       }
-
     } catch (error) {
-      console.error('Failed to update password:', error);
-      setError(error.message || 'Failed to update password. Please try again.');
+      console.error("Failed to update password:", error);
+      setError(error.message || "Failed to update password. Please try again.");
       setTimeout(() => setError(null), 5000);
     } finally {
       setIsSaving(false);
@@ -240,14 +247,14 @@ const ShopProfile = () => {
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setError('Image size should not exceed 2MB');
+      setError("Image size should not exceed 2MB");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload a valid image file');
+    if (!file.type.startsWith("image/")) {
+      setError("Please upload a valid image file");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -255,29 +262,29 @@ const ShopProfile = () => {
     // Preview image locally
     const reader = new FileReader();
     reader.onloadend = () => {
-      handleInputChange('shopImage', reader.result);
+      handleInputChange("shopImage", reader.result);
     };
     reader.readAsDataURL(file);
 
     // Optionally upload to server immediately
     try {
       const formData = new FormData();
-      formData.append('shop_image', file);
+      formData.append("shop_image", file);
 
       const response = await fetch(`${API}api/shop/upload-image.php`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
+        method: "POST",
+        credentials: "include",
+        body: formData,
       });
 
       const result = await response.json();
-      
+
       if (result.success && result.image_url) {
-        handleInputChange('shopImage', result.image_url);
-        console.log('Image uploaded successfully:', result.image_url);
+        handleInputChange("shopImage", result.image_url);
+        console.log("Image uploaded successfully:", result.image_url);
       }
     } catch (error) {
-      console.error('Failed to upload image:', error);
+      console.error("Failed to upload image:", error);
       // Still keep the local preview even if upload fails
     }
   };
@@ -287,7 +294,9 @@ const ShopProfile = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
-          <p className="text-gray-600 dark:text-gray-400">Loading shop profile...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading shop profile...
+          </p>
         </div>
       </div>
     );
@@ -343,15 +352,8 @@ const ShopProfile = () => {
               />
               <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <i className="fas fa-camera text-white text-2xl"></i>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
               </label>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Click to change image</p>
           </div>
 
           {/* Shop Info */}
@@ -361,21 +363,15 @@ const ShopProfile = () => {
                 {shopData.shopName}
               </h3>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  shopData.shopStatus === 'open'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                    : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                }`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    shopData.shopStatus === "open"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                      : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                  }`}
+                >
                   <i className="fas fa-circle text-xs mr-1"></i>
-                  {shopData.shopStatus === 'open' ? 'Open' : 'Closed'}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  shopData.visibility === 'public'
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-                }`}>
-                  <i className={`fas ${shopData.visibility === 'public' ? 'fa-eye' : 'fa-eye-slash'} text-xs mr-1`}></i>
-                  {shopData.visibility === 'public' ? 'Public' : 'Private'}
+                  {shopData.shopStatus === "open" ? "Open" : "Closed"}
                 </span>
               </div>
             </div>
@@ -383,43 +379,13 @@ const ShopProfile = () => {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Orders</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  Total Orders
+                </p>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {shopData.totalOrders.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Shop Rating</p>
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {shopData.rating.toFixed(1)} <i className="fas fa-star text-lg"></i>
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Toggles */}
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => handleInputChange('shopStatus', shopData.shopStatus === 'open' ? 'closed' : 'open')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  shopData.shopStatus === 'open'
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 hover:bg-red-200'
-                    : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-200'
-                }`}
-              >
-                <i className={`fas ${shopData.shopStatus === 'open' ? 'fa-times-circle' : 'fa-check-circle'} mr-2`}></i>
-                {shopData.shopStatus === 'open' ? 'Close Shop' : 'Open Shop'}
-              </button>
-              <button
-                onClick={() => handleInputChange('visibility', shopData.visibility === 'public' ? 'private' : 'public')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  shopData.visibility === 'public'
-                    ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-200'
-                }`}
-              >
-                <i className={`fas ${shopData.visibility === 'public' ? 'fa-eye-slash' : 'fa-eye'} mr-2`}></i>
-                {shopData.visibility === 'public' ? 'Make Private' : 'Make Public'}
-              </button>
             </div>
           </div>
         </div>
@@ -442,20 +408,8 @@ const ShopProfile = () => {
               <input
                 type="text"
                 value={shopData.shopName}
-                onChange={(e) => handleInputChange('shopName', e.target.value)}
+                onChange={(e) => handleInputChange("shopName", e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                value={shopData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows="3"
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white resize-none"
               />
             </div>
 
@@ -465,7 +419,7 @@ const ShopProfile = () => {
               </label>
               <textarea
                 value={shopData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
+                onChange={(e) => handleInputChange("address", e.target.value)}
                 rows="2"
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white resize-none"
               />
@@ -478,19 +432,9 @@ const ShopProfile = () => {
               <input
                 type="tel"
                 value={shopData.contactNumber}
-                onChange={(e) => handleInputChange('contactNumber', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Operating Hours
-              </label>
-              <input
-                type="text"
-                value={shopData.operatingHours}
-                onChange={(e) => handleInputChange('operatingHours', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("contactNumber", e.target.value)
+                }
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
               />
             </div>
@@ -518,7 +462,12 @@ const ShopProfile = () => {
                   <input
                     type="number"
                     value={shopData.bwPrice}
-                    onChange={(e) => handleInputChange('bwPrice', parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "bwPrice",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     min="0"
                     step="0.5"
                     className="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
@@ -537,7 +486,12 @@ const ShopProfile = () => {
                   <input
                     type="number"
                     value={shopData.colorPrice}
-                    onChange={(e) => handleInputChange('colorPrice', parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "colorPrice",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     min="0"
                     step="0.5"
                     className="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
@@ -548,7 +502,10 @@ const ShopProfile = () => {
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
                 <p className="text-xs text-purple-800 dark:text-purple-400 flex items-start">
                   <i className="fas fa-info-circle mt-0.5 mr-2"></i>
-                  <span>These prices will be displayed to customers when placing orders.</span>
+                  <span>
+                    These prices will be displayed to customers when placing
+                    orders.
+                  </span>
                 </p>
               </div>
             </div>
@@ -569,7 +526,7 @@ const ShopProfile = () => {
                 <input
                   type="text"
                   value={shopData.upiId}
-                  onChange={(e) => handleInputChange('upiId', e.target.value)}
+                  onChange={(e) => handleInputChange("upiId", e.target.value)}
                   placeholder="yourname@paytm"
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
                 />
@@ -581,19 +538,27 @@ const ShopProfile = () => {
                     <i className="fas fa-money-bill-wave text-orange-600 dark:text-orange-400"></i>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-800 dark:text-white">Accept Cash</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Allow cash on delivery payments</p>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      Accept Cash
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Allow cash on delivery payments
+                    </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleInputChange('acceptCash', !shopData.acceptCash)}
+                  onClick={() =>
+                    handleInputChange("acceptCash", !shopData.acceptCash)
+                  }
                   className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                    shopData.acceptCash ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                    shopData.acceptCash
+                      ? "bg-green-500"
+                      : "bg-gray-300 dark:bg-gray-600"
                   }`}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
-                      shopData.acceptCash ? 'transform translate-x-6' : ''
+                      shopData.acceptCash ? "transform translate-x-6" : ""
                     }`}
                   />
                 </button>
@@ -605,19 +570,27 @@ const ShopProfile = () => {
                     <i className="fas fa-mobile-alt text-blue-600 dark:text-blue-400"></i>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-800 dark:text-white">Accept UPI</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Allow UPI/online payments</p>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      Accept UPI
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Allow UPI/online payments
+                    </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleInputChange('acceptUPI', !shopData.acceptUPI)}
+                  onClick={() =>
+                    handleInputChange("acceptUPI", !shopData.acceptUPI)
+                  }
                   className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                    shopData.acceptUPI ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                    shopData.acceptUPI
+                      ? "bg-green-500"
+                      : "bg-gray-300 dark:bg-gray-600"
                   }`}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
-                      shopData.acceptUPI ? 'transform translate-x-6' : ''
+                      shopData.acceptUPI ? "transform translate-x-6" : ""
                     }`}
                   />
                 </button>
@@ -639,11 +612,12 @@ const ShopProfile = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Owner Name</label>
+                Owner Name
+              </label>
               <input
                 type="text"
                 value={shopData.ownerName}
-                onChange={(e) => handleInputChange('ownerName', e.target.value)}
+                onChange={(e) => handleInputChange("ownerName", e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
               />
             </div>
@@ -655,71 +629,13 @@ const ShopProfile = () => {
               <input
                 type="email"
                 value={shopData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
               />
             </div>
           </div>
 
           {/* Change Password */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
-                placeholder="Enter current password"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 dark:text-white"
-                placeholder="Confirm new password"
-              />
-            </div>
-
-            <button
-              onClick={handlePasswordUpdate}
-              disabled={isSaving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-              className="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
-            >
-              {isSaving ? (
-                <>
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-key mr-2"></i>
-                  Update Password
-                </>
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -731,7 +647,9 @@ const ShopProfile = () => {
               <i className="fas fa-save text-purple-600 dark:text-purple-400 text-xl"></i>
             </div>
             <div>
-              <h3 className="font-bold text-gray-800 dark:text-white">Save Your Changes</h3>
+              <h3 className="font-bold text-gray-800 dark:text-white">
+                Save Your Changes
+              </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Update your shop profile with the latest information
               </p>
@@ -763,11 +681,18 @@ const ShopProfile = () => {
         <div className="flex items-start space-x-3">
           <i className="fas fa-lightbulb text-blue-600 dark:text-blue-400 text-xl mt-1"></i>
           <div>
-            <h4 className="font-semibold text-blue-800 dark:text-blue-400 mb-1">Pro Tips</h4>
+            <h4 className="font-semibold text-blue-800 dark:text-blue-400 mb-1">
+              Pro Tips
+            </h4>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• Keep your shop information up to date to attract more customers</li>
+              <li>
+                • Keep your shop information up to date to attract more
+                customers
+              </li>
               <li>• Set competitive pricing to stay ahead in the market</li>
-              <li>• Enable multiple payment methods for customer convenience</li>
+              <li>
+                • Enable multiple payment methods for customer convenience
+              </li>
               <li>• Update your operating hours to avoid confusion</li>
             </ul>
           </div>
