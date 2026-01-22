@@ -49,7 +49,7 @@ This project connects **Users**, **Print Shop Owners**, and **Admins** into a si
 - Manage users and shops
 - Approve / deactivate shops
 - View all orders & revenue
-- Dummy backend API calls for testing
+
 
 ---
 
@@ -70,26 +70,6 @@ This project connects **Users**, **Print Shop Owners**, and **Admins** into a si
 - Dummy API fetch for testing
 - Git & GitHub
 
----
-
-## 📂 Project Structure (Frontend)
-src/
-│── components/
-│ ├── Dashboard/
-│ ├── Auth/
-│ ├── Orders/
-│ ├── Shop/
-│ ├── Admin/
-│
-│── pages/
-│ ├── admin/
-│ ├── user/
-│ ├── shop/
-│ ├── Profile.jsx
-│── App.jsx
-│── main.jsx
-│── index.css
-
 
 ---
 
@@ -97,14 +77,18 @@ src/
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/your-username/printease.git
+git clone https://github.com/bhavneetv/printease.git
 cd printease/Frontend
 npm install
 npm run dev
+```
 
+### Run in 
+```
 http://localhost:5173
+```
 
-
+---
 ### 📌 Future Enhancements
 
 - Real payment gateway integration
@@ -113,12 +97,16 @@ http://localhost:5173
 - Mobile app version
 - Shop rating & review system
 
+  ---
+
 ### 👨‍💻 Author
 
 - Bhavneet Verma & Vipul Gupta
 - B.Tech CSE | Full Stack Developer
 
-##📌 Passionate about building real-world, problem-solving applications.
+## 📌 Passionate about building real-world, problem-solving applications.
+
+---
 
 ### 📜 License
 This project is for educational and portfolio purposes.
