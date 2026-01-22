@@ -83,6 +83,14 @@ function App() {
           path: "/OrderDetailsPage",
           element: <OrderDetailsPage />,
         },
+        {
+          path: "/admin",
+          element: <AdminDashboard />,
+        },
+        {
+          path: "/UserManagement",
+          element: <UserManagement />,
+        },
       ],
     },
   ]);

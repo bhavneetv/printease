@@ -1,352 +1,871 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
 import {
   FaUsers,
-  FaShoppingBag,
-  FaMoneyBillWave,
-  FaClipboardList,
-  FaArrowUp,
-  FaArrowDown,
-  FaEllipsisH,
-  FaPlus,
-  FaFileExport,
-  FaCog,
+  FaStore,
+  FaShoppingCart,
+  FaRupeeSign,
+  FaSearch,
+  FaFilter,
+  FaEye,
+  FaCheck,
+  FaBan,
+  FaSpinner,
+  FaChevronLeft,
+  FaChevronRight,
   FaUserShield,
-  FaSync
-} from 'react-icons/fa';
+  FaBox,
+  FaTimes,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+  FaTruck,
+} from "react-icons/fa";
+import { isLoggedIn } from "../../assets/auth";
 
-import { isLoggedIn } from '../../assets/auth'; 
-
-// --- CONFIGURATION ---
-// TODO: Replace this with your actual Backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"; 
-
-export default function AdminDashboard() {
-  const navigate = useNavigate();
+// Mock Data Generator
+const generateMockUsers = () => {
+  const statuses = ["Active", "Inactive"];
+  const roles = ["user", "shopkeeper", "admin"];
+  const names = ["Rahul Kumar", "Priya Sharma", "Amit Patel", "Sneha Gupta", "Vijay Singh", "Anita Desai", "Rajesh Verma", "Pooja Reddy"];
   
-  // State for data, loading, and error
-  const [data, setData] = useState({
-    stats: [],
-    recentOrders: [],
-    recentActivity: [],
-    topProducts: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  return Array.from({ length: 25 }, (_, i) => ({
+    id: i + 1,
+    name: names[i % names.length] + ` ${i + 1}`,
+    email: `user${i + 1}@example.com`,
+    role: roles[Math.floor(Math.random() * roles.length)],
+    status: statuses[Math.floor(Math.random() * statuses.length)],
+    joined: new Date(2023 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toLocaleDateString('en-IN'),
+    orders: Math.floor(Math.random() * 50),
+  }));
+};
 
-  // --- 1. REAL API CALL FUNCTION ---
-  const fetchDashboardData = async () => {
+const generateMockShops = () => {
+  const statuses = ["Active", "Pending", "Inactive"];
+  const shopNames = ["QuickPrint Hub", "Digital Press", "PrintMaster", "CopyZone", "Express Prints", "Smart Print Solutions"];
+  
+  return Array.from({ length: 20 }, (_, i) => ({
+    id: i + 1,
+    name: `${shopNames[i % shopNames.length]} ${i + 1}`,
+    owner: `Owner ${i + 1}`,
+    email: `shop${i + 1}@example.com`,
+    phone: `+91 ${9000000000 + i}`,
+    address: `Shop ${i + 1}, Market Street, Delhi`,
+    status: statuses[Math.floor(Math.random() * statuses.length)],
+    registered: new Date(2023 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toLocaleDateString('en-IN'),
+    totalOrders: Math.floor(Math.random() * 200),
+    revenue: Math.floor(Math.random() * 100000),
+  }));
+};
+
+const generateMockOrders = () => {
+  const statuses = ["Pending", "Processing", "Completed", "Cancelled"];
+  
+  return Array.from({ length: 50 }, (_, i) => ({
+    id: `ORD${1000 + i}`,
+    customer: `Customer ${i + 1}`,
+    shop: `Shop ${(i % 10) + 1}`,
+    items: Math.floor(Math.random() * 5) + 1,
+    amount: Math.floor(Math.random() * 5000) + 500,
+    status: statuses[Math.floor(Math.random() * statuses.length)],
+    date: new Date(2025, 0, Math.floor(Math.random() * 22) + 1).toLocaleDateString('en-IN'),
+    paymentMethod: Math.random() > 0.5 ? "Online" : "COD",
+  }));
+};
+
+// Confirmation Modal Component
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, type = "warning" }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+        <div className="flex items-center gap-3 mb-4">
+          {type === "warning" && <FaBan className="text-red-500 text-2xl" />}
+          {type === "success" && <FaCheckCircle className="text-green-500 text-2xl" />}
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
+        </div>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-4 py-2 rounded-lg text-white transition-colors ${
+              type === "warning"
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Dashboard Component
+export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState("users");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [modalConfig, setModalConfig] = useState({ isOpen: false });
+  const userId = isLoggedIn("admin");
+  const api = import.meta.env.VITE_API;
+  const itemsPerPage = 10;
+
+  // Stats
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalShops: 0,
+    totalOrders: 0,
+    activeOrders: 0,
+    completedOrders: 0,
+    totalRevenue: 0,
+  });
+
+  // Simulate API call to fetch data
+ useEffect(() => {
+  const fetchData = async () => {
     setLoading(true);
-    setError(null);
 
     try {
-      // Retrieve the token from storage (Adjust 'authToken' to whatever key you use)
-      const token = localStorage.getItem('authToken'); 
+      const response = await fetch(`${api}api/admin/dashboard.php`, {
+        headers: {
+          "X-USER-ID": userId, // admin id
+        },
+      });
 
-      if (!token) {
-        throw new Error("No authentication token found. Please login.");
+      const data = await response.json();
+      console.log(data);
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to load dashboard");
       }
 
-      // Headers for authentication
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Standard JWT format
-      };
+      const users = data.users || [];
+      const shops = data.shops || [];
+      const orders = data.orders || [];
 
-      // Option A: If your backend returns everything in one endpoint
-      const response = await fetch(`${API_BASE_URL}/dashboard/summary`, { headers });
-      
-      // Option B: If you need to fetch multiple endpoints in parallel (Common pattern)
-      /*
-      const [statsRes, ordersRes, activityRes, productsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/stats`, { headers }),
-        fetch(`${API_BASE_URL}/orders/recent`, { headers }),
-        fetch(`${API_BASE_URL}/activity`, { headers }),
-        fetch(`${API_BASE_URL}/products/top`, { headers })
-      ]);
-      // Check .ok for all, then await .json() for all...
-      */
+      setUsers(users);
+      setShops(shops);
+      setOrders(orders);
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired or invalid
-          navigate('/login');
-          throw new Error("Session expired");
-        }
-        throw new Error(`Server Error: ${response.statusText}`);
-      }
+      // 📊 Stats (same logic as mock)
+      setStats({
+        totalUsers: users.length,
+        totalShops: shops.filter(s => s.status === "Active").length,
+        totalOrders: orders.length,
+        activeOrders: orders.filter(
+          o => o.status === "Processing" || o.status === "Pending"
+        ).length,
+        completedOrders: orders.filter(o => o.status === "Completed").length,
+        totalRevenue: orders
+          .filter(o => o.status === "Completed")
+          .reduce((sum, o) => sum + Number(o.amount || 0), 0),
+      });
 
-      const result = await response.json();
-      
-      // We set the state with the REAL data from the backend
-      // Ensure your backend JSON structure matches what the UI expects, 
-      // or map it here (e.g. result.data.orders)
-      setData(result); 
-
-    } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
-      setError(err.message);
+    } catch (error) {
+      console.error("Dashboard load error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 2. INITIALIZATION ---
-  useEffect(() => {
-    // Check if user is theoretically logged in via your auth utility
-    const isUserAuthenticated = isLoggedIn ? isLoggedIn("user") : true; 
+  fetchData();
+}, []);
+
+
+  // Handle status toggle
+  const handleStatusToggle = async (id, type, currentStatus) => {
+    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
     
-    if (!isUserAuthenticated) {
-      navigate("/login"); 
-    } else {
-      fetchDashboardData();
+    setModalConfig({
+      isOpen: true,
+      title: `${newStatus === "Active" ? "Activate" : "Deactivate"} ${type}`,
+      message: `Are you sure you want to ${newStatus === "Active" ? "activate" : "deactivate"} this ${type.toLowerCase()}?`,
+      type: "warning",
+      onConfirm: async () => {
+        setUpdatingId(id);
+        setModalConfig({ isOpen: false });
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        if (type === "User") {
+          setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
+        } else if (type === "Shop") {
+          setShops(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
+        }
+        
+        setUpdatingId(null);
+      },
+    });
+  };
+
+  // Handle shop approval
+  const handleShopApproval = async (id) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Approve Shop",
+      message: "Are you sure you want to approve this shop?",
+      type: "success",
+      onConfirm: async () => {
+        setUpdatingId(id);
+        setModalConfig({ isOpen: false });
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setShops(prev => prev.map(s => s.id === id ? { ...s, status: "Active" } : s));
+        setUpdatingId(null);
+      },
+    });
+  };
+
+  // Filter data based on active tab
+  const getFilteredData = () => {
+    let data = [];
+    
+    switch (activeTab) {
+      case "users":
+        data = users;
+        break;
+      case "shops":
+        data = shops;
+        break;
+      case "orders":
+        data = orders;
+        break;
+      default:
+        data = [];
     }
-  }, [navigate]);
-
-  // --- HELPER FUNCTIONS ---
-
-  const handleExport = () => {
-    if (!data.recentOrders || data.recentOrders.length === 0) return;
     
-    const headers = ["Order ID", "Product", "Customer", "Date", "Total", "Status"];
-    const rows = data.recentOrders.map(order => [
-      order.id,
-      order.product,
-      order.customer,
-      new Date(order.date).toLocaleDateString(),
-      order.total,
-      order.status
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `orders_export_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return data.filter(item => {
+      const matchesSearch = activeTab === "orders"
+        ? item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.customer.toLowerCase().includes(searchTerm.toLowerCase())
+        : (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           item.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesFilter = filterStatus === "All" || item.status === filterStatus;
+      
+      return matchesSearch && matchesFilter;
+    });
   };
 
-  const formatCurrency = (amount) => {
-    // Check if amount is a valid number before formatting
-    if (isNaN(amount) || amount === null) return "$0.00";
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
+  const filteredData = getFilteredData();
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const getRelativeTime = (dateString) => {
-    if (!dateString) return "";
-    const timestamp = new Date(dateString).getTime();
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  // Reset page when changing tabs or filters
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm, filterStatus]);
+
+  const getStatusBadge = (status) => {
+    const configs = {
+      Active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      Inactive: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400",
+      Pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      Processing: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      Completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      Cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    };
     
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " years ago";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " months ago";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " days ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " hours ago";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " mins ago";
-    return "Just now";
+    return configs[status] || configs.Inactive;
   };
 
-  // Icon Mapper
-  const getStatIcon = (label) => {
-    // Basic string matching to assign icons dynamically based on backend labels
-    const l = label.toLowerCase();
-    if (l.includes('revenue') || l.includes('money')) return <FaMoneyBillWave />;
-    if (l.includes('user') || l.includes('customer')) return <FaUsers />;
-    if (l.includes('order') || l.includes('sale')) return <FaShoppingBag />;
-    return <FaClipboardList />;
+  const getStatusIcon = (status) => {
+    const icons = {
+      Pending: <FaClock />,
+      Processing: <FaTruck />,
+      Completed: <FaCheckCircle />,
+      Cancelled: <FaTimesCircle />,
+    };
+    return icons[status] || null;
   };
 
-  // Color Mapper
-  const getStatColor = (label) => {
-    const l = label.toLowerCase();
-    if (l.includes('revenue')) return "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400";
-    if (l.includes('user')) return "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400";
-    if (l.includes('order')) return "text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400";
-    return "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400";
-  };
-
-  const getStatusStyle = (status) => {
-    if (!status) return 'bg-gray-100 text-gray-700 border border-gray-200';
-    const s = status.toLowerCase();
-    if (s === 'completed' || s === 'paid') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800';
-    if (s === 'processing') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800';
-    if (s === 'pending') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800';
-    if (s === 'cancelled' || s === 'failed') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800';
-    return 'bg-gray-100 text-gray-700 border border-gray-200';
-  };
-
-  // --- RENDER ---
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
-        <h2 className="text-xl font-bold mb-2">Error Loading Dashboard</h2>
-        <p className="mb-4 text-red-500">{error}</p>
-        <button onClick={fetchDashboardData} className="px-4 py-2 bg-purple-600 text-white rounded-lg">Retry</button>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-5xl text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 font-sans">
-      
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 p-4 md:p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Dashboard Overview</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Real-time data from server.
-          </p>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Admin Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Monitor and manage your PrintEase platform</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaUsers className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">Total</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.totalUsers}</p>
+          <p className="text-sm opacity-90">Users</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={fetchDashboardData} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-            <FaSync />
-          </button>
-          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-            <FaFileExport /> Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition shadow-md shadow-purple-500/20">
-            <FaPlus /> Add Product
-          </button>
+
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaStore className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">Active</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.totalShops}</p>
+          <p className="text-sm opacity-90">Shops</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaShoppingCart className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">All</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.totalOrders}</p>
+          <p className="text-sm opacity-90">Orders</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaClock className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">Active</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.activeOrders}</p>
+          <p className="text-sm opacity-90">Orders</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaCheckCircle className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">Done</span>
+          </div>
+          <p className="text-2xl font-bold">{stats.completedOrders}</p>
+          <p className="text-sm opacity-90">Orders</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <FaRupeeSign className="text-3xl opacity-80" />
+            <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded">Total</span>
+          </div>
+          <p className="text-2xl font-bold">₹{stats.totalRevenue.toLocaleString()}</p>
+          <p className="text-sm opacity-90">Revenue</p>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {data.stats && data.stats.map((stat, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                  {/* Handle formatting based on your backend data types */}
-                  {stat.type === 'money' ? formatCurrency(stat.value) : stat.value}
-                </h3>
+      {/* Management Sections */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <div className="flex overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`px-6 py-4 font-medium whitespace-nowrap transition-colors ${
+                activeTab === "users"
+                  ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <FaUsers className="inline mr-2" />
+              Users Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("shops")}
+              className={`px-6 py-4 font-medium whitespace-nowrap transition-colors ${
+                activeTab === "shops"
+                  ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <FaStore className="inline mr-2" />
+              Shops Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-6 py-4 font-medium whitespace-nowrap transition-colors ${
+                activeTab === "orders"
+                  ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              <FaShoppingCart className="inline mr-2" />
+              Orders Overview
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="text-gray-400" />
               </div>
-              <div className={`p-3 rounded-lg ${getStatColor(stat.label)}`}>
-                {getStatIcon(stat.label)}
-              </div>
+              <input
+                type="text"
+                placeholder={`Search ${activeTab}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+              />
             </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className={`flex items-center font-medium ${stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {stat.trend === 'up' ? <FaArrowUp className="mr-1 text-xs" /> : <FaArrowDown className="mr-1 text-xs" />}
-                {stat.change}%
-              </span>
-              <span className="text-gray-400 ml-2">vs last month</span>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaFilter className="text-gray-400 text-xs" />
+              </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="pl-8 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 outline-none w-full sm:w-auto cursor-pointer"
+              >
+                <option value="All">All Status</option>
+                {activeTab === "orders" ? (
+                  <>
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    {activeTab === "shops" && <option value="Pending">Pending</option>}
+                  </>
+                )}
+              </select>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
-        {/* Left Column: Recent Orders */}
-        <div className="xl:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h2>
+        {/* Content */}
+        {paginatedData.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="bg-gray-100 dark:bg-gray-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaBox className="text-gray-400 text-2xl" />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No data found</h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1">
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="px-6 py-3">Order ID</th>
-                    <th className="px-6 py-3">Product</th>
-                    <th className="px-6 py-3">Customer</th>
-                    <th className="px-6 py-3">Total</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3 text-right">Action</th>
+                    {activeTab === "users" && (
+                      <>
+                        <th className="px-6 py-4 text-left">User</th>
+                        <th className="px-6 py-4 text-left">Role</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-left">Joined</th>
+                        <th className="px-6 py-4 text-left">Orders</th>
+                        <th className="px-6 py-4 text-left">Actions</th>
+                      </>
+                    )}
+                    {activeTab === "shops" && (
+                      <>
+                        <th className="px-6 py-4 text-left">Shop</th>
+                        <th className="px-6 py-4 text-left">Owner</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-left">Registered</th>
+                        <th className="px-6 py-4 text-left">Revenue</th>
+                        <th className="px-6 py-4 text-left">Actions</th>
+                      </>
+                    )}
+                    {activeTab === "orders" && (
+                      <>
+                        <th className="px-6 py-4 text-left">Order ID</th>
+                        <th className="px-6 py-4 text-left">Customer</th>
+                        <th className="px-6 py-4 text-left">Shop</th>
+                        <th className="px-6 py-4 text-left">Amount</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-left">Date</th>
+                        <th className="px-6 py-4 text-left">Actions</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {data.recentOrders && data.recentOrders.map((order, i) => (
-                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.product}</td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">
-                            {order.customer ? order.customer.charAt(0) : "?"}
-                          </div>
-                          {order.customer}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{formatCurrency(order.total)}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                          <FaEllipsisH />
-                        </button>
-                      </td>
+                  {paginatedData.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      {activeTab === "users" && (
+                        <>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold shrink-0">
+                                {item.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-900 dark:text-white">{item.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{item.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="capitalize text-gray-700 dark:text-gray-300">{item.role}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.status === "Active" ? "bg-green-500" : "bg-gray-500"}`}></span>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{item.joined}</td>
+                          <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{item.orders}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              {updatingId === item.id ? (
+                                <FaSpinner className="animate-spin text-purple-600" />
+                              ) : (
+                                <>
+                                  <button className="text-purple-600 hover:text-purple-700 dark:text-purple-400">
+                                    <FaEye />
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusToggle(item.id, "User", item.status)}
+                                    className={`${item.status === "Active" ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}`}
+                                  >
+                                    {item.status === "Active" ? <FaBan /> : <FaCheck />}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </>
+                      )}
+                      {activeTab === "shops" && (
+                        <>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
+                                {item.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-900 dark:text-white">{item.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{item.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{item.owner}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{item.registered}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium">₹{item.revenue.toLocaleString()}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              {updatingId === item.id ? (
+                                <FaSpinner className="animate-spin text-purple-600" />
+                              ) : (
+                                <>
+                                  <button className="text-purple-600 hover:text-purple-700 dark:text-purple-400">
+                                    <FaEye />
+                                  </button>
+                                  {item.status === "Pending" ? (
+                                    <button
+                                      onClick={() => handleShopApproval(item.id)}
+                                      className="text-green-600 hover:text-green-700"
+                                    >
+                                      <FaCheck />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleStatusToggle(item.id, "Shop", item.status)}
+                                      className={`${item.status === "Active" ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}`}
+                                    >
+                                      {item.status === "Active" ? <FaBan /> : <FaCheck />}
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </>
+                      )}
+                      {activeTab === "orders" && (
+                        <>
+                          <td className="px-6 py-4">
+                            <div className="font-semibold text-gray-900 dark:text-white">{item.id}</div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{item.customer}</td>
+                          <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{item.shop}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium">₹{item.amount.toLocaleString()}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                              {getStatusIcon(item.status)}
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{item.date}</td>
+                          <td className="px-6 py-4">
+                            <button className="text-purple-600 hover:text-purple-700 dark:text-purple-400">
+                              <FaEye />
+                            </button>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
 
-        {/* Right Column */}
-        <div className="space-y-8">
-          
-          {/* Top Products */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Products</h2>
-            <div className="space-y-4">
-              {data.topProducts && data.topProducts.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.sales} sold</p>
-                  </div>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(item.revenue)}</span>
+            {/* Mobile Card View */}
+            <div className="lg:hidden p-4 space-y-4">
+              {paginatedData.map((item) => (
+                <div key={item.id} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  {activeTab === "users" && (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold">
+                            {item.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{item.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{item.email}</div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Role</p>
+                          <p className="text-gray-900 dark:text-white font-medium capitalize">{item.role}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Orders</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.orders}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Joined</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.joined}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        {updatingId === item.id ? (
+                          <FaSpinner className="animate-spin text-purple-600" />
+                        ) : (
+                          <>
+                            <button className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                              <FaEye /> View
+                            </button>
+                            <button
+                              onClick={() => handleStatusToggle(item.id, "User", item.status)}
+                              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                                item.status === "Active"
+                                  ? "bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400"
+                                  : "bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400"
+                              }`}
+                            >
+                              {item.status === "Active" ? <><FaBan /> Deactivate</> : <><FaCheck /> Activate</>}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === "shops" && (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
+                            {item.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{item.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{item.owner}</div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Revenue</p>
+                          <p className="text-gray-900 dark:text-white font-medium">₹{item.revenue.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Orders</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.totalOrders}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Registered</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.registered}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        {updatingId === item.id ? (
+                          <FaSpinner className="animate-spin text-purple-600" />
+                        ) : (
+                          <>
+                            <button className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                              <FaEye /> View
+                            </button>
+                            {item.status === "Pending" ? (
+                              <button
+                                onClick={() => handleShopApproval(item.id)}
+                                className="flex-1 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                              >
+                                <FaCheck /> Approve
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleStatusToggle(item.id, "Shop", item.status)}
+                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                                  item.status === "Active"
+                                    ? "bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400"
+                                    : "bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400"
+                                }`}
+                              >
+                                {item.status === "Active" ? <><FaBan /> Deactivate</> : <><FaCheck /> Activate</>}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === "orders" && (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="font-bold text-gray-900 dark:text-white">{item.id}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{item.customer}</div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                          {getStatusIcon(item.status)}
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Shop</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.shop}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Amount</p>
+                          <p className="text-gray-900 dark:text-white font-medium">₹{item.amount.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Date</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.date}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs">Payment</p>
+                          <p className="text-gray-900 dark:text-white font-medium">{item.paymentMethod}</p>
+                        </div>
+                      </div>
+                      <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <button className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                          <FaEye /> View Details
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-              {data.recentActivity && data.recentActivity.map((act, i) => (
-                <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center gap-4 w-full">
-                    <div className="absolute left-0 w-5 h-5 rounded-full border-2 border-white dark:border-gray-800 bg-purple-500"></div>
-                    <div className="ml-8">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{act.action}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">{act.user}</span> • {getRelativeTime(act.timestamp || act.created_at)}
-                      </p>
-                    </div>
-                  </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
                 </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <FaChevronLeft />
+                  </button>
+                  <div className="hidden sm:flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 rounded-lg transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-purple-600 text-white"
+                              : "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span className="sm:hidden text-sm text-gray-600 dark:text-gray-400">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <FaChevronRight />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ isOpen: false })}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }
